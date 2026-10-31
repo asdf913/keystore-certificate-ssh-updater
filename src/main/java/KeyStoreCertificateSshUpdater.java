@@ -283,8 +283,12 @@ public class KeyStoreCertificateSshUpdater {
 							try (final InputStream is2 = testAndApply(Objects::nonNull, filePem, FileInputStream::new,
 									null)) {
 								//
-								sftpClient.put(is2, "/tmp/" + filePem.getName());
-								//
+								if (sftpClient != null) {
+									//
+									sftpClient.put(is2, "/tmp/" + filePem.getName());
+									//
+								} // if
+									//
 							} // try
 								//
 							final String keytool = get(map, "keytool");
