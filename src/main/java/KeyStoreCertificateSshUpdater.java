@@ -194,12 +194,9 @@ public class KeyStoreCertificateSshUpdater {
 							//
 						} else {
 							//
-							// boolean writeable = false;
-							//
 							try {
 								//
-								if (// writeable =
-								Objects.equals(
+								if (Objects.equals(
 										StringUtils.trim(executeRemoteCommand(clientSession,
 												"[ -w " + file + " ] && echo \"Writable\" || echo \"Not Writable\"")),
 										"Writable")) {
