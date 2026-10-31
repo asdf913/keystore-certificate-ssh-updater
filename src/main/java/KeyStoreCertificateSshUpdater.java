@@ -57,6 +57,7 @@ import org.apache.sshd.client.SshClient;
 import org.apache.sshd.client.channel.ChannelExec;
 import org.apache.sshd.client.future.AuthFuture;
 import org.apache.sshd.client.future.ConnectFuture;
+import org.apache.sshd.client.future.OpenFuture;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.client.session.ClientSessionCreator;
 import org.apache.sshd.common.future.VerifiableFuture;
@@ -74,6 +75,14 @@ public class KeyStoreCertificateSshUpdater {
 		//
 		final Map<String, String> map = toMap(args);
 		//
+		final File tempFile = File.createTempFile(nextAlphabetic(RandomStringUtils.secure(), 3), null);
+		//
+		if (tempFile != null) {
+			//
+			tempFile.deleteOnExit();
+			//
+		} // if
+			//
 		try (final SshClient sshClient = SshClient.setUpDefaultClient()) {
 			//
 			start(sshClient);
@@ -82,7 +91,7 @@ public class KeyStoreCertificateSshUpdater {
 			//
 			final String algorithm = getAlgorithm(md);
 			//
-			final int length = StringUtils.length(algorithm);
+			final int length = Math.max(StringUtils.length(algorithm), 8);
 			//
 			final String host = get(map, "host");
 			//
@@ -104,20 +113,15 @@ public class KeyStoreCertificateSshUpdater {
 			//
 			System.out.println(StringUtils.rightPad("url", length) + "=" + url);
 			//
+			System.out.println(StringUtils.rightPad("tempFile", length) + "="
+					+ (tempFile != null ? tempFile.getAbsolutePath() : null));
+			//
 			try (final ClientSession clientSession = testAndApply(
 					(a, b) -> Boolean.logicalAnd(a != null, StringUtils.isNotEmpty(b)), user, host,
 					(a, b) -> getSession(verify(connect(sshClient, a, b, port))), null)) {
 				//
 				testAndAccept(Objects::nonNull, get(map, "password"), x -> addPasswordIdentity(clientSession, x));
 				//
-				final File tempFile = File.createTempFile(nextAlphabetic(RandomStringUtils.secure(), 3), null);
-				//
-				if (tempFile != null) {
-					//
-					tempFile.deleteOnExit();
-					//
-				} // if
-					//
 				try (final SftpClient sftpClient = isSuccess(verify(auth(clientSession)))
 						? createSftpClient(SftpClientFactory.instance(), clientSession)
 						: null; final InputStream is = read(sftpClient, file)) {
@@ -187,6 +191,9 @@ public class KeyStoreCertificateSshUpdater {
 									//
 								} else {
 									//
+									System.out.println(String.join("", "sudo cp -p ", file, " ", file, ".`date -r ",
+											file, " +%Y%m%d_%H%M%S`"));
+									//
 									try (final ChannelExec channel = clientSession.createExecChannel(String.join("",
 											"sudo cp -p ", file, " ", file, ".`date -r ", file, " +%Y%m%d_%H%M%S`"));
 											final OutputStream out = new ByteArrayOutputStream();
@@ -198,7 +205,10 @@ public class KeyStoreCertificateSshUpdater {
 											//
 											channel.setErr(err);
 											//
-											channel.open().verify(Duration.ofSeconds(5));
+											final OpenFuture openFuture = channel.open().verify(Duration.ofSeconds(5));
+											//
+											System.out.println(StringUtils.rightPad("opened", length) + "="
+													+ (openFuture != null ? openFuture.isOpened() : null));
 											//
 										} // if
 											//
@@ -239,14 +249,6 @@ public class KeyStoreCertificateSshUpdater {
 								//
 						} // if
 							//
-					} // if
-						//
-				} finally {
-					//
-					if (tempFile != null && tempFile.exists() && tempFile.isFile()) {
-						//
-						FileUtils.delete(tempFile);
-						//
 					} // if
 						//
 				} // try
