@@ -11,7 +11,11 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.OpenOption;
+import java.nio.file.Path;
 import java.rmi.RemoteException;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.cert.Certificate;
@@ -63,9 +67,13 @@ import org.apache.sshd.client.future.ConnectFuture;
 import org.apache.sshd.client.future.OpenFuture;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.client.session.ClientSessionCreator;
+import org.apache.sshd.common.config.keys.FilePasswordProvider;
+import org.apache.sshd.common.config.keys.loader.KeyPairResourceLoader;
 import org.apache.sshd.common.future.VerifiableFuture;
 import org.apache.sshd.common.session.Session;
+import org.apache.sshd.common.session.SessionContext;
 import org.apache.sshd.common.session.SessionHolder;
+import org.apache.sshd.putty.PuttyKeyUtils;
 import org.apache.sshd.sftp.client.SftpClient;
 import org.apache.sshd.sftp.client.SftpClientFactory;
 import org.d2ab.function.ObjIntPredicate;
@@ -94,7 +102,7 @@ public class KeyStoreCertificateSshUpdater {
 			//
 			final String algorithm = getAlgorithm(md);
 			//
-			final int length = Math.max(StringUtils.length(algorithm), 8);
+			final int length = Math.max(StringUtils.length(algorithm), 9);
 			//
 			final String host = get(map, "host");
 			//
@@ -124,6 +132,18 @@ public class KeyStoreCertificateSshUpdater {
 					(a, b) -> getSession(verify(connect(sshClient, a, b, port))), null)) {
 				//
 				testAndAccept(Objects::nonNull, get(map, "password"), x -> addPasswordIdentity(clientSession, x));
+				//
+				final String publicKeyFile = get(map, "publicKey");
+				//
+				System.out.println(StringUtils.rightPad("publicKey", length) + "=" + publicKeyFile);
+				//
+				testAndAccept(Objects::nonNull,
+						testAndApply(x -> size(x) == 1,
+								testAndApply(x -> Boolean.logicalAnd(exists(x), isFile(x)),
+										testAndApply(Objects::nonNull, publicKeyFile, File::new, null),
+										x -> loadKeyPairs(PuttyKeyUtils.DEFAULT_INSTANCE, null, toPath(x), null), null),
+								x -> new ArrayList<>(x).get(0), null),
+						x -> addPublicKeyIdentity(clientSession, x));
 				//
 				try (final SftpClient sftpClient = isSuccess(verify(auth(clientSession)))
 						? createSftpClient(SftpClientFactory.instance(), clientSession)
@@ -305,6 +325,30 @@ public class KeyStoreCertificateSshUpdater {
 				//
 		} // try
 			//
+	}
+
+	private static void addPublicKeyIdentity(final ClientAuthenticationManager instance, final KeyPair keyPair) {
+		if (instance != null) {
+			instance.addPublicKeyIdentity(keyPair);
+		}
+	}
+
+	private static Collection<KeyPair> loadKeyPairs(final KeyPairResourceLoader instance, final SessionContext session,
+			final Path path, final FilePasswordProvider passwordProvider, final OpenOption... options)
+			throws IOException, GeneralSecurityException {
+		return instance != null ? instance.loadKeyPairs(session, path, passwordProvider, options) : null;
+	}
+
+	private static boolean exists(final File instance) {
+		return instance != null && instance.getPath() != null && instance.exists();
+	}
+
+	private static boolean isFile(final File instance) {
+		return instance != null && instance.getPath() != null && instance.isFile();
+	}
+
+	private static Path toPath(final File instance) {
+		return instance != null && instance.getPath() != null ? instance.toPath() : null;
 	}
 
 	private static String toUpperCase(final String instance) {
