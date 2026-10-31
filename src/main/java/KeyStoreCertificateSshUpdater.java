@@ -267,10 +267,14 @@ public class KeyStoreCertificateSshUpdater {
 								//
 							} // try
 								//
+							final String keytool = get(map, "keytool");
+							//
+							System.out.println(StringUtils.rightPad("keytool", length) + "=" + keytool);
+							//
 							try (final ChannelExec channel = createExecChannel(clientSession,
-									String.join("", "sudo /usr/local/java/jdk1.8.0_131/bin/keytool -import -keystore ",
-											file, " -storepass ", storepass, " -file ", "/tmp/" + filePem.getName(),
-											" -noprompt -alias ", alias));
+									String.join("", "sudo ", keytool, " -import -keystore ", file, " -storepass ",
+											storepass, " -file ", "/tmp/" + filePem.getName(), " -noprompt -alias ",
+											alias));
 									final OutputStream out = new ByteArrayOutputStream();
 									final OutputStream err = new ByteArrayOutputStream()) {
 								//
