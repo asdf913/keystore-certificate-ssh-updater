@@ -1,0 +1,6 @@
+.classpath
+.project
+/.settings
+/KeyStoreCertificateSshUpdater.log
+/target
+dependency-reduced-pom.xml
