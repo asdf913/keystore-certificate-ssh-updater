@@ -128,17 +128,24 @@ public class KeyStoreCertificateSshUpdater {
 						//
 					} // is
 						//
-					final KeyStore keyStore = testAndApply(x -> x != null && x.exists() && x.length() > 0, tempFile,
-							x -> KeyStore.getInstance(x, toCharArray(get(map, "storepass"))), null);
+					final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 					//
 					if (keyStore != null) {
 						//
+						try (final InputStream is2 = testAndApply(
+								x -> x != null && x.exists() && x.isFile() && x.length() > 0, tempFile,
+								FileInputStream::new, null)) {
+							//
+							keyStore.load(is2, toCharArray(get(map, "storepass")));
+							//
+						} // try
+							//
 						final Certificate certificate = getCertfiicate(url);
 						//
 						final byte[] encoded = getEncoded(certificate);
 						//
 						System.out.println(StringUtils.rightPad(algorithm, length) + "="
-								+ Hex.encodeHexString(digest(md, encoded)));
+								+ testAndApply(Objects::nonNull, digest(md, encoded), Hex::encodeHexString, null));
 						//
 						final Enumeration<String> aliases = keyStore.aliases();
 						//
@@ -181,7 +188,7 @@ public class KeyStoreCertificateSshUpdater {
 								} else {
 									//
 									try (final ChannelExec channel = clientSession.createExecChannel(String.join("",
-											"sudo  cp -p ", file, " ", file, ".`date -r ", file, " +%Y%m%d_%H%M%S`"));
+											"sudo cp -p ", file, " ", file, ".`date -r ", file, " +%Y%m%d_%H%M%S`"));
 											final OutputStream out = new ByteArrayOutputStream();
 											final OutputStream err = new ByteArrayOutputStream()) {
 										//
@@ -211,7 +218,8 @@ public class KeyStoreCertificateSshUpdater {
 							//
 							final String alias = StringUtils.joinWith("_",
 									StringUtils.substringAfter(getName(getSubjectX500Principal(x509Certificate)), '='),
-									df.format(getNotBefore(x509Certificate)), df.format(getNotAfter(x509Certificate)));
+									format(df, getNotBefore(x509Certificate)),
+									format(df, getNotAfter(x509Certificate)));
 							//
 							System.out.println(StringUtils.rightPad("alias", length) + "=" + alias);
 							//
@@ -249,6 +257,18 @@ public class KeyStoreCertificateSshUpdater {
 			//
 	}
 
+	private static String format(final DateFormat instance, final Date date) {
+		//
+		if (instance instanceof SimpleDateFormat) {
+			//
+			return date != null ? instance.format(date) : null;
+			//
+		} // if
+			//
+		return instance != null ? instance.format(date) : null;
+		//
+	}
+
 	private static Date getNotBefore(final X509Certificate instnace) {
 		return instnace != null ? instnace.getNotBefore() : null;
 	}
@@ -267,7 +287,7 @@ public class KeyStoreCertificateSshUpdater {
 
 	private static byte[] digest(final MessageDigest instance, final byte[] input) {
 		//
-		if (instance == null) {
+		if (instance == null || input == null) {
 			//
 			return null;
 			//
