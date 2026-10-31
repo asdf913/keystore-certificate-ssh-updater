@@ -1,9 +1,11 @@
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Writer;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Proxy;
@@ -20,6 +22,7 @@ import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
@@ -87,7 +90,7 @@ public class KeyStoreCertificateSshUpdater {
 			//
 			start(sshClient);
 			//
-			final MessageDigest md = MessageDigest.getInstance("SHA-256");
+			final MessageDigest md = MessageDigest.getInstance("SHA-1");
 			//
 			final String algorithm = getAlgorithm(md);
 			//
@@ -134,13 +137,15 @@ public class KeyStoreCertificateSshUpdater {
 						//
 					final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 					//
+					final String storepass = get(map, "storepass");
+					//
 					if (keyStore != null) {
 						//
 						try (final InputStream is2 = testAndApply(
 								x -> x != null && x.exists() && x.isFile() && x.length() > 0, tempFile,
 								FileInputStream::new, null)) {
 							//
-							keyStore.load(is2, toCharArray(get(map, "storepass")));
+							keyStore.load(is2, toCharArray(storepass));
 							//
 						} // try
 							//
@@ -148,8 +153,25 @@ public class KeyStoreCertificateSshUpdater {
 						//
 						final byte[] encoded = getEncoded(certificate);
 						//
+						String hexString = testAndApply(Objects::nonNull, digest(md, encoded), Hex::encodeHexString,
+								null);
+						//
+						final StringBuilder sb = new StringBuilder();
+						//
+						for (int i = 0; hexString != null && i < hexString.length(); i++) {
+							//
+							sb.append(hexString.charAt(i));
+							//
+							if (i % 2 == 1 && i < hexString.length() - 1) {
+								//
+								sb.append(':');
+								//
+							} // if
+								//
+						} // for
+							//
 						System.out.println(StringUtils.rightPad(algorithm, length) + "="
-								+ testAndApply(Objects::nonNull, digest(md, encoded), Hex::encodeHexString, null));
+								+ (hexString = toUpperCase(Objects.toString(sb))));
 						//
 						final Enumeration<String> aliases = keyStore.aliases();
 						//
@@ -172,30 +194,29 @@ public class KeyStoreCertificateSshUpdater {
 							//
 						} else {
 							//
-							boolean writeable = false;
+							// boolean writeable = false;
 							//
 							try {
 								//
-								if (writeable = Objects.equals(
-										StringUtils.trim(clientSession.executeRemoteCommand(
+								if (// writeable =
+								Objects.equals(
+										StringUtils.trim(executeRemoteCommand(clientSession,
 												"[ -w " + file + " ] && echo \"Writable\" || echo \"Not Writable\"")),
 										"Writable")) {
 									//
 									System.out.println(StringUtils.rightPad("backup", length) + "="
-											+ StringUtils
-													.trim(clientSession.executeRemoteCommand(String.join(String.join("",
+											+ StringUtils.trim(
+													executeRemoteCommand(clientSession, String.join(String.join("",
 															"echo ", file, ".`date -r ", file, " +%Y%m%d_%H%M%S`")))));
 									//
-									clientSession.executeRemoteCommand(String.join("", "cp -p ", file, " ", file,
+									executeRemoteCommand(clientSession, String.join("", "cp -p ", file, " ", file,
 											".`date -r ", file, " +%Y%m%d_%H%M%S`"));
 									//
 								} else {
 									//
-									System.out.println(String.join("", "sudo cp -p ", file, " ", file, ".`date -r ",
-											file, " +%Y%m%d_%H%M%S`"));
-									//
-									try (final ChannelExec channel = clientSession.createExecChannel(String.join("",
-											"sudo cp -p ", file, " ", file, ".`date -r ", file, " +%Y%m%d_%H%M%S`"));
+									try (final ChannelExec channel = createExecChannel(clientSession,
+											String.join("", "sudo cp -p ", file, " ", file, ".`date -r ", file,
+													" +%Y%m%d_%H%M%S`"));
 											final OutputStream out = new ByteArrayOutputStream();
 											final OutputStream err = new ByteArrayOutputStream()) {
 										//
@@ -233,20 +254,46 @@ public class KeyStoreCertificateSshUpdater {
 							//
 							System.out.println(StringUtils.rightPad("alias", length) + "=" + alias);
 							//
+							final File filePem = new File(String.join(".", alias, "pem"));
+							//
+							System.out.println(StringUtils.rightPad("filePem", length) + "="
+									+ (filePem != null ? filePem.getAbsolutePath() : null));
+							//
+							writeToPem(getEncoded(certificate), "CERTIFICATE", filePem);
+							//
 							keyStore.setCertificateEntry(alias, certificate);
 							//
-							if (writeable) {
+							try (final InputStream is2 = testAndApply(Objects::nonNull, filePem, FileInputStream::new,
+									null)) {
 								//
-								sftpClient.put(new FileInputStream(tempFile), file);
+								sftpClient.put(is2, "/tmp/" + filePem.getName());
 								//
-								System.out.println("Certificate is added.");
+							} // try
 								//
-							} else {
+							try (final ChannelExec channel = createExecChannel(clientSession,
+									String.join("", "sudo /usr/local/java/jdk1.8.0_131/bin/keytool -import -keystore ",
+											file, " -storepass ", storepass, " -file ", "/tmp/" + filePem.getName(),
+											" -noprompt -alias ", alias));
+									final OutputStream out = new ByteArrayOutputStream();
+									final OutputStream err = new ByteArrayOutputStream()) {
 								//
-								System.err.println("Certificate is not added.");
+								if (channel != null) {
+									//
+									channel.setOut(out);
+									//
+									channel.setErr(err);
+									//
+									final OpenFuture openFuture = channel.open().verify(Duration.ofSeconds(5));
+									//
+									System.out.println(StringUtils.rightPad("opened", length) + "="
+											+ (openFuture != null ? openFuture.isOpened() : null));
+									//
+								} // if
+									//
+							} // try
 								//
-							} // if
-								//
+							System.err.println("Certificate is added.");
+							//
 						} // if
 							//
 					} // if
@@ -257,6 +304,45 @@ public class KeyStoreCertificateSshUpdater {
 				//
 		} // try
 			//
+	}
+
+	private static String toUpperCase(final String instance) {
+		return instance != null ? instance.toUpperCase() : null;
+	}
+
+	private static void writeToPem(byte[] encodedBytes, String label, final File file) throws IOException {
+		//
+		final Base64.Encoder mimeEncoder = Base64.getMimeEncoder(64, new byte[] { '\n' });
+		//
+		final String base64Body = encodedBytes != null ? mimeEncoder.encodeToString(encodedBytes) : null;
+		//
+		try (final Writer writer = testAndApply(Objects::nonNull, file, FileWriter::new, null)) {
+			//
+			if (writer != null) {
+				//
+				writer.write("-----BEGIN " + label + "-----\n");
+				//
+				if (base64Body != null) {
+					//
+					writer.write(base64Body);
+					//
+				} // if
+					//
+				writer.write("\n-----END " + label + "-----\n");
+				//
+			} // if
+				//
+		} // try
+			//
+	}
+
+	private static String executeRemoteCommand(final ClientSession instance, final String command) throws IOException {
+		return instance != null ? instance.executeRemoteCommand(command) : null;
+	}
+
+	private static ChannelExec createExecChannel(final ClientSession instance, final String command)
+			throws IOException {
+		return instance != null ? instance.createExecChannel(command) : null;
 	}
 
 	private static String format(final DateFormat instance, final Date date) {
