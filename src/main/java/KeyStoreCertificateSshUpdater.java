@@ -44,6 +44,14 @@ import java.util.stream.Stream;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.security.auth.x500.X500Principal;
+import javax.xml.namespace.QName;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
@@ -79,6 +87,11 @@ import org.apache.sshd.putty.PuttyKeyUtils;
 import org.apache.sshd.sftp.client.SftpClient;
 import org.apache.sshd.sftp.client.SftpClientFactory;
 import org.d2ab.function.ObjIntPredicate;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import com.google.common.net.HostAndPort;
 
@@ -87,8 +100,6 @@ import io.github.toolfactory.narcissus.Narcissus;
 public class KeyStoreCertificateSshUpdater {
 
 	public static void main(final String[] args) throws Exception {
-		//
-		final Map<String, String> map = toMap(args);
 		//
 		final File tempFile = File.createTempFile(nextAlphabetic(RandomStringUtils.secure(), 3), null);
 		//
@@ -102,16 +113,133 @@ public class KeyStoreCertificateSshUpdater {
 			//
 			start(sshClient);
 			//
-			final Config config = new Config();
+			final Map<String, String> map = toMap(args);
 			//
-			config.hostAndPort = HostAndPort.fromParts(get(map, "host"), NumberUtils.toInt(get(map, "port"), 22));
-			//
-			config.basicCredentialsProvider = new BasicCredentialsImpl(get(map, "user"), get(map, "password"));
-			//
-			perform(sshClient, config, tempFile, map, MessageDigest.getInstance("SHA-1"));
-			//
+			if (containsKey(map, "config")) {
+				//
+				final Document document = testAndApply(x -> x != null && x.exists() && x.isFile(),
+						testAndApply(Objects::nonNull, get(map, "config"), File::new, null),
+						x -> parse(newDocumentBuilder(DocumentBuilderFactory.newDefaultInstance()), x), null);
+				//
+				final XPathFactory xpf = XPathFactory.newDefaultInstance();
+				//
+				final XPath xp = xpf != null ? xpf.newXPath() : null;
+				//
+				final NodeList nodeList1 = cast(NodeList.class,
+						evaluate(xp, "/*/config", document, XPathConstants.NODESET));
+				//
+				NodeList nodeList2 = null;
+				//
+				Node node1, node2 = null;
+				//
+				NamedNodeMap attributes = null;
+				//
+				Config config = null;
+				//
+				Map<String, String> temp = null;
+				//
+				MessageDigest md = null;
+				//
+				for (int i = 0; nodeList1 != null && i < nodeList1.getLength(); i++) {
+					//
+					if ((node1 = nodeList1.item(i)) == null) {
+						//
+						continue;
+						//
+					} // if
+						//
+					(config = new Config()).hostAndPort = HostAndPort.fromParts(
+							getNodeValue(getNamedItem(attributes = getAttributes(node1), "host")),
+							NumberUtils.toInt(getNodeValue(getNamedItem(attributes, "port")), 22));
+					//
+					config.basicCredentialsProvider = new BasicCredentialsImpl(
+							getNodeValue(getNamedItem(attributes, "user")),
+							getNodeValue(getNamedItem(attributes, "password")));
+					//
+					nodeList2 = cast(NodeList.class, evaluate(xp, "*/keystore", node1, XPathConstants.NODESET));
+					//
+					clear(temp = ObjectUtils.getIfNull(temp, LinkedHashMap::new));
+					//
+					put(temp, "url", get(map, "url"));
+					//
+					put(temp, "keytool", getNodeValue(getNamedItem(attributes, "keytool")));
+					//
+					put(temp, "publicKey", getNodeValue(getNamedItem(attributes, "publicKey")));
+					//
+					for (int j = 0; nodeList2 != null && j < nodeList2.getLength(); j++) {
+						//
+						if ((node2 = nodeList2.item(j)) == null) {
+							//
+							continue;
+							//
+						} // if
+							//
+						if (md == null) {
+							//
+							md = MessageDigest.getInstance("SHA-1");
+							//
+						} // if
+							//
+						put(temp, "file", getNodeValue(getNamedItem(attributes = getAttributes(node2), "path")));
+						//
+						put(temp, "storepass", getNodeValue(getNamedItem(attributes, "password")));
+						//
+						perform(sshClient, config, tempFile, temp, md);
+						//
+					} // for
+						//
+				} // for
+					//
+			} else {
+				//
+				final Config config = new Config();
+				//
+				config.hostAndPort = HostAndPort.fromParts(get(map, "host"), NumberUtils.toInt(get(map, "port"), 22));
+				//
+				config.basicCredentialsProvider = new BasicCredentialsImpl(get(map, "user"), get(map, "password"));
+				//
+				perform(sshClient, config, tempFile, map, MessageDigest.getInstance("SHA-1"));
+				//
+			} // if
+				//
 		} // try
 			//
+	}
+
+	private static void clear(final Map<?, ?> instance) {
+		if (instance != null) {
+			instance.clear();
+		}
+	}
+
+	private static String getNodeValue(final Node instance) {
+		return instance != null ? instance.getNodeValue() : null;
+	}
+
+	private static Node getNamedItem(final NamedNodeMap instance, final String name) {
+		return instance != null ? instance.getNamedItem(name) : null;
+	}
+
+	private static NamedNodeMap getAttributes(final Node instance) {
+		return instance != null ? instance.getAttributes() : null;
+	}
+
+	private static DocumentBuilder newDocumentBuilder(final DocumentBuilderFactory instance)
+			throws ParserConfigurationException {
+		return instance != null ? instance.newDocumentBuilder() : null;
+	}
+
+	private static Document parse(final DocumentBuilder instance, final File file) throws SAXException, IOException {
+		return instance != null ? instance.parse(file) : null;
+	}
+
+	private static Object evaluate(final XPath instance, final String string, final Object object, final QName qName)
+			throws XPathExpressionException {
+		return instance != null && object != null ? instance.evaluate(string, object, qName) : null;
+	}
+
+	private static boolean containsKey(final Map<?, ?> instance, final Object key) {
+		return instance != null && instance.containsKey(key);
 	}
 
 	private static class Config {
