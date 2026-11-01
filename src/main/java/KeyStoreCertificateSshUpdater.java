@@ -156,6 +156,9 @@ public class KeyStoreCertificateSshUpdater {
 							getNodeValue(getNamedItem(attributes, "user")),
 							getNodeValue(getNamedItem(attributes, "password")));
 					//
+					config.publicKey = testAndApply(Objects::nonNull,
+							getNodeValue(getNamedItem(attributes, "publicKey")), File::new, null);
+					//
 					nodeList2 = cast(NodeList.class, evaluate(xp, "*/keystore", node1, XPathConstants.NODESET));
 					//
 					clear(temp = ObjectUtils.getIfNull(temp, LinkedHashMap::new));
@@ -163,8 +166,6 @@ public class KeyStoreCertificateSshUpdater {
 					put(temp, "url", get(map, "url"));
 					//
 					put(temp, "keytool", getNodeValue(getNamedItem(attributes, "keytool")));
-					//
-					put(temp, "publicKey", getNodeValue(getNamedItem(attributes, "publicKey")));
 					//
 					for (int j = 0; nodeList2 != null && j < nodeList2.getLength(); j++) {
 						//
@@ -197,6 +198,8 @@ public class KeyStoreCertificateSshUpdater {
 				config.hostAndPort = HostAndPort.fromParts(get(map, "host"), NumberUtils.toInt(get(map, "port"), 22));
 				//
 				config.basicCredentialsProvider = new BasicCredentialsImpl(get(map, "user"), get(map, "password"));
+				//
+				config.publicKey = testAndApply(Objects::nonNull, get(map, "publicKey"), File::new, null);
 				//
 				perform(sshClient, config, tempFile, map, MessageDigest.getInstance("SHA-1"));
 				//
@@ -248,6 +251,8 @@ public class KeyStoreCertificateSshUpdater {
 
 		private BasicCredentialsProvider basicCredentialsProvider = null;
 
+		private File publicKey = null;
+
 	}
 
 	private static void perform(final SshClient sshClient, final Config config, final File tempFile,
@@ -280,12 +285,10 @@ public class KeyStoreCertificateSshUpdater {
 					basicCredentialsProvider != null ? basicCredentialsProvider.getPassword() : null,
 					x -> addPasswordIdentity(clientSession, x));
 			//
-			final String publicKeyFile = get(map, "publicKey");
-			//
 			testAndAccept(Objects::nonNull,
 					testAndApply(x -> size(x) == 1,
 							testAndApply(x -> Boolean.logicalAnd(exists(x), isFile(x)),
-									testAndApply(Objects::nonNull, publicKeyFile, File::new, null),
+									config != null ? config.publicKey : null,
 									x -> loadKeyPairs(PuttyKeyUtils.DEFAULT_INSTANCE, null, toPath(x), null), null),
 							x -> new ArrayList<>(x).get(0), null),
 					x -> addPublicKeyIdentity(clientSession, x));
