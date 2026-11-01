@@ -119,9 +119,9 @@ public class KeyStoreCertificateSshUpdater {
 				//
 				final Document document = testAndApply(x -> x != null && x.exists() && x.isFile(),
 						testAndApply(Objects::nonNull, get(map, "config"), File::new, null),
-						x -> parse(newDocumentBuilder(DocumentBuilderFactory.newDefaultInstance()), x), null);
+						x -> parse(newDocumentBuilder(DocumentBuilderFactory.newInstance()), x), null);
 				//
-				final XPathFactory xpf = XPathFactory.newDefaultInstance();
+				final XPathFactory xpf = XPathFactory.newInstance();
 				//
 				final XPath xp = xpf != null ? xpf.newXPath() : null;
 				//
