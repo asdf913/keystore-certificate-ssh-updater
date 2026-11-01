@@ -67,6 +67,8 @@ import org.apache.sshd.client.future.ConnectFuture;
 import org.apache.sshd.client.future.OpenFuture;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.client.session.ClientSessionCreator;
+import org.apache.sshd.common.auth.BasicCredentialsImpl;
+import org.apache.sshd.common.auth.BasicCredentialsProvider;
 import org.apache.sshd.common.config.keys.FilePasswordProvider;
 import org.apache.sshd.common.config.keys.loader.KeyPairResourceLoader;
 import org.apache.sshd.common.future.VerifiableFuture;
@@ -77,6 +79,8 @@ import org.apache.sshd.putty.PuttyKeyUtils;
 import org.apache.sshd.sftp.client.SftpClient;
 import org.apache.sshd.sftp.client.SftpClientFactory;
 import org.d2ab.function.ObjIntPredicate;
+
+import com.google.common.net.HostAndPort;
 
 import io.github.toolfactory.narcissus.Narcissus;
 
@@ -98,232 +102,240 @@ public class KeyStoreCertificateSshUpdater {
 			//
 			start(sshClient);
 			//
-			final MessageDigest md = MessageDigest.getInstance("SHA-1");
+			final Config config = new Config();
 			//
-			final String algorithm = getAlgorithm(md);
+			config.hostAndPort = HostAndPort.fromParts(get(map, "host"), NumberUtils.toInt(get(map, "port"), 22));
 			//
-			final int length = Math.max(StringUtils.length(algorithm), 9);
+			config.basicCredentialsProvider = new BasicCredentialsImpl(get(map, "user"), get(map, "password"));
 			//
-			final String host = get(map, "host");
+			perform(sshClient, config, tempFile, map, MessageDigest.getInstance("SHA-1"));
 			//
-			System.out.println(StringUtils.rightPad("host", length) + "=" + host);
+		} // try
 			//
-			final int port = NumberUtils.toInt(get(map, "port"), 22);
+	}
+
+	private static class Config {
+
+		private HostAndPort hostAndPort = null;
+
+		private BasicCredentialsProvider basicCredentialsProvider = null;
+
+	}
+
+	private static void perform(final SshClient sshClient, final Config config, final File tempFile,
+			final Map<String, String> map, final MessageDigest md) throws Exception {
+		//
+		final String algorithm = getAlgorithm(md);
+		//
+		final int length = Math.max(StringUtils.length(algorithm), 9);
+		//
+		final HostAndPort hostAndPort = config != null ? config.hostAndPort : null;
+		//
+		final String host = hostAndPort != null ? hostAndPort.getHost() : null;
+		//
+		final int port = hostAndPort != null && hostAndPort.hasPort() ? hostAndPort.getPort() : 22;
+		//
+		final BasicCredentialsProvider basicCredentialsProvider = config != null ? config.basicCredentialsProvider
+				: null;
+		//
+		final String user = basicCredentialsProvider != null ? basicCredentialsProvider.getUsername() : null;
+		//
+		final String file = get(map, "file");
+		//
+		final String url = get(map, "url");
+		//
+		try (final ClientSession clientSession = testAndApply(
+				(a, b) -> Boolean.logicalAnd(a != null, StringUtils.isNotEmpty(b)), user, host,
+				(a, b) -> getSession(verify(connect(sshClient, a, b, port))), null)) {
 			//
-			System.out.println(StringUtils.rightPad("port", length) + "=" + port);
+			testAndAccept(Objects::nonNull,
+					basicCredentialsProvider != null ? basicCredentialsProvider.getPassword() : null,
+					x -> addPasswordIdentity(clientSession, x));
 			//
-			final String user = get(map, "user");
+			final String publicKeyFile = get(map, "publicKey");
 			//
-			System.out.println(StringUtils.rightPad("user", length) + "=" + user);
+			testAndAccept(Objects::nonNull,
+					testAndApply(x -> size(x) == 1,
+							testAndApply(x -> Boolean.logicalAnd(exists(x), isFile(x)),
+									testAndApply(Objects::nonNull, publicKeyFile, File::new, null),
+									x -> loadKeyPairs(PuttyKeyUtils.DEFAULT_INSTANCE, null, toPath(x), null), null),
+							x -> new ArrayList<>(x).get(0), null),
+					x -> addPublicKeyIdentity(clientSession, x));
 			//
-			final String file = get(map, "file");
-			//
-			System.out.println(StringUtils.rightPad("file", length) + "=" + file);
-			//
-			final String url = get(map, "url");
-			//
-			System.out.println(StringUtils.rightPad("url", length) + "=" + url);
-			//
-			System.out.println(StringUtils.rightPad("tempFile", length) + "="
-					+ (tempFile != null ? tempFile.getAbsolutePath() : null));
-			//
-			try (final ClientSession clientSession = testAndApply(
-					(a, b) -> Boolean.logicalAnd(a != null, StringUtils.isNotEmpty(b)), user, host,
-					(a, b) -> getSession(verify(connect(sshClient, a, b, port))), null)) {
+			try (final SftpClient sftpClient = isSuccess(verify(auth(clientSession)))
+					? createSftpClient(SftpClientFactory.instance(), clientSession)
+					: null; final InputStream is = read(sftpClient, file)) {
 				//
-				testAndAccept(Objects::nonNull, get(map, "password"), x -> addPasswordIdentity(clientSession, x));
-				//
-				final String publicKeyFile = get(map, "publicKey");
-				//
-				System.out.println(StringUtils.rightPad("publicKey", length) + "=" + publicKeyFile);
-				//
-				testAndAccept(Objects::nonNull,
-						testAndApply(x -> size(x) == 1,
-								testAndApply(x -> Boolean.logicalAnd(exists(x), isFile(x)),
-										testAndApply(Objects::nonNull, publicKeyFile, File::new, null),
-										x -> loadKeyPairs(PuttyKeyUtils.DEFAULT_INSTANCE, null, toPath(x), null), null),
-								x -> new ArrayList<>(x).get(0), null),
-						x -> addPublicKeyIdentity(clientSession, x));
-				//
-				try (final SftpClient sftpClient = isSuccess(verify(auth(clientSession)))
-						? createSftpClient(SftpClientFactory.instance(), clientSession)
-						: null; final InputStream is = read(sftpClient, file)) {
+				if (is != null && tempFile != null && tempFile.exists() && tempFile.canWrite()) {
 					//
-					if (is != null && tempFile != null && tempFile.exists() && tempFile.canWrite()) {
-						//
-						FileUtils.writeByteArrayToFile(tempFile, IOUtils.toByteArray(is));
-						//
-					} // is
-						//
-					final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+					FileUtils.writeByteArrayToFile(tempFile, IOUtils.toByteArray(is));
 					//
-					final String storepass = get(map, "storepass");
+				} // is
 					//
-					if (keyStore != null) {
+				final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+				//
+				final String storepass = get(map, "storepass");
+				//
+				if (keyStore != null) {
+					//
+					try (final InputStream is2 = testAndApply(
+							x -> x != null && x.exists() && x.isFile() && x.length() > 0, tempFile,
+							FileInputStream::new, null)) {
 						//
-						try (final InputStream is2 = testAndApply(
-								x -> x != null && x.exists() && x.isFile() && x.length() > 0, tempFile,
-								FileInputStream::new, null)) {
-							//
-							keyStore.load(is2, toCharArray(storepass));
-							//
-						} // try
-							//
-						final Certificate certificate = getCertfiicate(url);
+						keyStore.load(is2, toCharArray(storepass));
 						//
-						final byte[] encoded = getEncoded(certificate);
+					} // try
 						//
-						String hexString = testAndApply(Objects::nonNull, digest(md, encoded), Hex::encodeHexString,
-								null);
+					final Certificate certificate = getCertfiicate(url);
+					//
+					final byte[] encoded = getEncoded(certificate);
+					//
+					String hexString = testAndApply(Objects::nonNull, digest(md, encoded), Hex::encodeHexString, null);
+					//
+					final StringBuilder sb = new StringBuilder();
+					//
+					for (int i = 0; hexString != null && i < hexString.length(); i++) {
 						//
-						final StringBuilder sb = new StringBuilder();
+						sb.append(hexString.charAt(i));
 						//
-						for (int i = 0; hexString != null && i < hexString.length(); i++) {
+						if (i % 2 == 1 && i < hexString.length() - 1) {
 							//
-							sb.append(hexString.charAt(i));
-							//
-							if (i % 2 == 1 && i < hexString.length() - 1) {
-								//
-								sb.append(':');
-								//
-							} // if
-								//
-						} // for
-							//
-						System.out.println(StringUtils.rightPad(algorithm, length) + "="
-								+ (hexString = toUpperCase(Objects.toString(sb))));
-						//
-						final Enumeration<String> aliases = keyStore.aliases();
-						//
-						boolean found = false;
-						//
-						while (aliases != null && aliases.hasMoreElements()) {
-							//
-							if ((found = Arrays.equals(getEncoded(keyStore.getCertificate(aliases.nextElement())),
-									encoded))) {
-								//
-								break;
-								//
-							} // if
-								//
-						} // while
-							//
-						if (found) {
-							//
-							System.out.println("Certificate is found.");
-							//
-						} else {
-							//
-							try {
-								//
-								if (Objects.equals(
-										StringUtils.trim(executeRemoteCommand(clientSession,
-												"[ -w " + file + " ] && echo \"Writable\" || echo \"Not Writable\"")),
-										"Writable")) {
-									//
-									System.out.println(StringUtils.rightPad("backup", length) + "="
-											+ StringUtils.trim(
-													executeRemoteCommand(clientSession, String.join(String.join("",
-															"echo ", file, ".`date -r ", file, " +%Y%m%d_%H%M%S`")))));
-									//
-									executeRemoteCommand(clientSession, String.join("", "cp -p ", file, " ", file,
-											".`date -r ", file, " +%Y%m%d_%H%M%S`"));
-									//
-								} else {
-									//
-									try (final ChannelExec channel = createExecChannel(clientSession,
-											String.join("", "sudo cp -p ", file, " ", file, ".`date -r ", file,
-													" +%Y%m%d_%H%M%S`"));
-											final OutputStream out = new ByteArrayOutputStream();
-											final OutputStream err = new ByteArrayOutputStream()) {
-										//
-										if (channel != null) {
-											//
-											channel.setOut(out);
-											//
-											channel.setErr(err);
-											//
-											final OpenFuture openFuture = channel.open().verify(Duration.ofSeconds(5));
-											//
-											System.out.println(StringUtils.rightPad("opened", length) + "="
-													+ (openFuture != null ? openFuture.isOpened() : null));
-											//
-										} // if
-											//
-									} // try
-										//
-								} // if
-									//
-							} catch (final RemoteException e) {
-								//
-								e.printStackTrace();
-								//
-							} // try
-								//
-							final X509Certificate x509Certificate = cast(X509Certificate.class, certificate);
-							//
-							final DateFormat df = new SimpleDateFormat("yyyyMMdd");
-							//
-							final String alias = StringUtils.joinWith("_",
-									StringUtils.substringAfter(getName(getSubjectX500Principal(x509Certificate)), '='),
-									format(df, getNotBefore(x509Certificate)),
-									format(df, getNotAfter(x509Certificate)));
-							//
-							System.out.println(StringUtils.rightPad("alias", length) + "=" + alias);
-							//
-							final File filePem = new File(String.join(".", alias, "pem"));
-							//
-							System.out.println(StringUtils.rightPad("filePem", length) + "="
-									+ (filePem != null ? filePem.getAbsolutePath() : null));
-							//
-							writeToPem(getEncoded(certificate), "CERTIFICATE", filePem);
-							//
-							keyStore.setCertificateEntry(alias, certificate);
-							//
-							try (final InputStream is2 = testAndApply(Objects::nonNull, filePem, FileInputStream::new,
-									null)) {
-								//
-								if (sftpClient != null) {
-									//
-									sftpClient.put(is2, "/tmp/" + filePem.getName());
-									//
-								} // if
-									//
-							} // try
-								//
-							final String keytool = get(map, "keytool");
-							//
-							System.out.println(StringUtils.rightPad("keytool", length) + "=" + keytool);
-							//
-							try (final ChannelExec channel = createExecChannel(clientSession,
-									String.join("", "sudo ", keytool, " -import -keystore ", file, " -storepass ",
-											storepass, " -file ", "/tmp/" + filePem.getName(), " -noprompt -alias ",
-											alias));
-									final OutputStream out = new ByteArrayOutputStream();
-									final OutputStream err = new ByteArrayOutputStream()) {
-								//
-								if (channel != null) {
-									//
-									channel.setOut(out);
-									//
-									channel.setErr(err);
-									//
-									final OpenFuture openFuture = channel.open().verify(Duration.ofSeconds(5));
-									//
-									System.out.println(StringUtils.rightPad("opened", length) + "="
-											+ (openFuture != null ? openFuture.isOpened() : null));
-									//
-								} // if
-									//
-							} // try
-								//
-							System.err.println("Certificate is added.");
+							sb.append(':');
 							//
 						} // if
 							//
+					} // for
+						//
+					System.out.println(StringUtils.rightPad(algorithm, length) + "="
+							+ (hexString = toUpperCase(Objects.toString(sb))));
+					//
+					final Enumeration<String> aliases = keyStore.aliases();
+					//
+					boolean found = false;
+					//
+					while (aliases != null && aliases.hasMoreElements()) {
+						//
+						if ((found = Arrays.equals(getEncoded(keyStore.getCertificate(aliases.nextElement())),
+								encoded))) {
+							//
+							break;
+							//
+						} // if
+							//
+					} // while
+						//
+					if (found) {
+						//
+						System.out.println("Certificate is found.");
+						//
+					} else {
+						//
+						try {
+							//
+							if (Objects.equals(
+									StringUtils.trim(executeRemoteCommand(clientSession,
+											"[ -w " + file + " ] && echo \"Writable\" || echo \"Not Writable\"")),
+									"Writable")) {
+								//
+								System.out.println(StringUtils.rightPad("backup", length) + "="
+										+ StringUtils.trim(executeRemoteCommand(clientSession, String.join(String
+												.join("", "echo ", file, ".`date -r ", file, " +%Y%m%d_%H%M%S`")))));
+								//
+								executeRemoteCommand(clientSession, String.join("", "cp -p ", file, " ", file,
+										".`date -r ", file, " +%Y%m%d_%H%M%S`"));
+								//
+							} else {
+								//
+								try (final ChannelExec channel = createExecChannel(clientSession,
+										String.join("", "sudo cp -p ", file, " ", file, ".`date -r ", file,
+												" +%Y%m%d_%H%M%S`"));
+										final OutputStream out = new ByteArrayOutputStream();
+										final OutputStream err = new ByteArrayOutputStream()) {
+									//
+									if (channel != null) {
+										//
+										channel.setOut(out);
+										//
+										channel.setErr(err);
+										//
+										final OpenFuture openFuture = channel.open().verify(Duration.ofSeconds(5));
+										//
+										System.out.println(StringUtils.rightPad("opened", length) + "="
+												+ (openFuture != null ? openFuture.isOpened() : null));
+										//
+									} // if
+										//
+								} // try
+									//
+							} // if
+								//
+						} catch (final RemoteException e) {
+							//
+							e.printStackTrace();
+							//
+						} // try
+							//
+						final X509Certificate x509Certificate = cast(X509Certificate.class, certificate);
+						//
+						final DateFormat df = new SimpleDateFormat("yyyyMMdd");
+						//
+						final String alias = StringUtils.joinWith("_",
+								StringUtils.substringAfter(getName(getSubjectX500Principal(x509Certificate)), '='),
+								format(df, getNotBefore(x509Certificate)), format(df, getNotAfter(x509Certificate)));
+						//
+						System.out.println(StringUtils.rightPad("alias", length) + "=" + alias);
+						//
+						final File filePem = new File(String.join(".", alias, "pem"));
+						//
+						System.out.println(StringUtils.rightPad("filePem", length) + "="
+								+ (filePem != null ? filePem.getAbsolutePath() : null));
+						//
+						writeToPem(getEncoded(certificate), "CERTIFICATE", filePem);
+						//
+						keyStore.setCertificateEntry(alias, certificate);
+						//
+						try (final InputStream is2 = testAndApply(Objects::nonNull, filePem, FileInputStream::new,
+								null)) {
+							//
+							if (sftpClient != null) {
+								//
+								sftpClient.put(is2, "/tmp/" + filePem.getName());
+								//
+							} // if
+								//
+						} // try
+							//
+						final String keytool = get(map, "keytool");
+						//
+						System.out.println(StringUtils.rightPad("keytool", length) + "=" + keytool);
+						//
+						try (final ChannelExec channel = createExecChannel(clientSession,
+								String.join("", "sudo ", keytool, " -import -keystore ", file, " -storepass ",
+										storepass, " -file ", "/tmp/" + filePem.getName(), " -noprompt -alias ",
+										alias));
+								final OutputStream out = new ByteArrayOutputStream();
+								final OutputStream err = new ByteArrayOutputStream()) {
+							//
+							if (channel != null) {
+								//
+								channel.setOut(out);
+								//
+								channel.setErr(err);
+								//
+								final OpenFuture openFuture = channel.open().verify(Duration.ofSeconds(5));
+								//
+								System.out.println(StringUtils.rightPad("opened", length) + "="
+										+ (openFuture != null ? openFuture.isOpened() : null));
+								//
+							} // if
+								//
+						} // try
+							//
+						System.err.println("Certificate is added.");
+						//
 					} // if
 						//
-				} // try
+				} // if
 					//
 			} // try
 				//
