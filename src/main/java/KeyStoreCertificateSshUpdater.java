@@ -159,6 +159,8 @@ public class KeyStoreCertificateSshUpdater {
 					config.publicKey = testAndApply(Objects::nonNull,
 							getNodeValue(getNamedItem(attributes, "publicKey")), File::new, null);
 					//
+					config.keytool = getNodeValue(getNamedItem(attributes, "keytool"));
+					//
 					nodeList2 = cast(NodeList.class, evaluate(xp, "*/keystore", node1, XPathConstants.NODESET));
 					//
 					clear(temp = ObjectUtils.getIfNull(temp, LinkedHashMap::new));
@@ -200,6 +202,8 @@ public class KeyStoreCertificateSshUpdater {
 				config.basicCredentialsProvider = new BasicCredentialsImpl(get(map, "user"), get(map, "password"));
 				//
 				config.publicKey = testAndApply(Objects::nonNull, get(map, "publicKey"), File::new, null);
+				//
+				config.keytool = get(map, "keytool");
 				//
 				perform(sshClient, config, tempFile, map, MessageDigest.getInstance("SHA-1"));
 				//
@@ -252,6 +256,8 @@ public class KeyStoreCertificateSshUpdater {
 		private BasicCredentialsProvider basicCredentialsProvider = null;
 
 		private File publicKey = null;
+
+		private String keytool = null;
 
 	}
 
@@ -436,7 +442,7 @@ public class KeyStoreCertificateSshUpdater {
 								//
 						} // try
 							//
-						final String keytool = get(map, "keytool");
+						final String keytool = config != null ? config.keytool : null;
 						//
 						System.out.println(StringUtils.rightPad("keytool", length) + "=" + keytool);
 						//
