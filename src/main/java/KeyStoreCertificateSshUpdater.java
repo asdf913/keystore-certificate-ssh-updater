@@ -136,9 +136,9 @@ public class KeyStoreCertificateSshUpdater {
 				//
 				Config config = null;
 				//
-				Map<String, String> temp = null;
-				//
 				MessageDigest md = null;
+				//
+				final String url = get(map, "url");
 				//
 				for (int i = 0; nodeList1 != null && i < nodeList1.getLength(); i++) {
 					//
@@ -163,10 +163,6 @@ public class KeyStoreCertificateSshUpdater {
 					//
 					nodeList2 = cast(NodeList.class, evaluate(xp, "*/keystore", node1, XPathConstants.NODESET));
 					//
-					clear(temp = ObjectUtils.getIfNull(temp, LinkedHashMap::new));
-					//
-					put(temp, "url", get(map, "url"));
-					//
 					for (int j = 0; nodeList2 != null && j < nodeList2.getLength(); j++) {
 						//
 						if ((node2 = nodeList2.item(j)) == null) {
@@ -181,11 +177,11 @@ public class KeyStoreCertificateSshUpdater {
 							//
 						} // if
 							//
-						put(temp, "file", getNodeValue(getNamedItem(attributes = getAttributes(node2), "path")));
+						config.keyStorePathPassword = Pair.of(
+								getNodeValue(getNamedItem(attributes = getAttributes(node2), "path")),
+								getNodeValue(getNamedItem(attributes, "password")));
 						//
-						put(temp, "storepass", getNodeValue(getNamedItem(attributes, "password")));
-						//
-						perform(sshClient, config, tempFile, temp, md);
+						perform(sshClient, config, tempFile, url, md);
 						//
 					} // for
 						//
@@ -203,18 +199,14 @@ public class KeyStoreCertificateSshUpdater {
 				//
 				config.keytool = get(map, "keytool");
 				//
-				perform(sshClient, config, tempFile, map, MessageDigest.getInstance("SHA-1"));
+				config.keyStorePathPassword = Pair.of(get(map, "keystore"), get(map, "storepass"));
+				//
+				perform(sshClient, config, tempFile, get(map, "url"), MessageDigest.getInstance("SHA-1"));
 				//
 			} // if
 				//
 		} // try
 			//
-	}
-
-	private static void clear(final Map<?, ?> instance) {
-		if (instance != null) {
-			instance.clear();
-		}
 	}
 
 	private static String getNodeValue(final Node instance) {
@@ -257,10 +249,12 @@ public class KeyStoreCertificateSshUpdater {
 
 		private String keytool = null;
 
+		private Entry<String, String> keyStorePathPassword = null;
+
 	}
 
-	private static void perform(final SshClient sshClient, final Config config, final File tempFile,
-			final Map<String, String> map, final MessageDigest md) throws Exception {
+	private static void perform(final SshClient sshClient, final Config config, final File tempFile, final String url,
+			final MessageDigest md) throws Exception {
 		//
 		final String algorithm = getAlgorithm(md);
 		//
@@ -277,9 +271,9 @@ public class KeyStoreCertificateSshUpdater {
 		//
 		final String user = basicCredentialsProvider != null ? basicCredentialsProvider.getUsername() : null;
 		//
-		final String file = get(map, "file");
+		final Entry<String, String> keyStorePathPassword = config != null ? config.keyStorePathPassword : null;
 		//
-		final String url = get(map, "url");
+		final String file = getKey(keyStorePathPassword);
 		//
 		try (final ClientSession clientSession = testAndApply(
 				(a, b) -> Boolean.logicalAnd(a != null, StringUtils.isNotEmpty(b)), user, host,
@@ -309,7 +303,7 @@ public class KeyStoreCertificateSshUpdater {
 					//
 				final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 				//
-				final String storepass = get(map, "storepass");
+				final String storepass = getValue(keyStorePathPassword);
 				//
 				if (keyStore != null) {
 					//
