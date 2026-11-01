@@ -167,8 +167,6 @@ public class KeyStoreCertificateSshUpdater {
 					//
 					put(temp, "url", get(map, "url"));
 					//
-					put(temp, "keytool", getNodeValue(getNamedItem(attributes, "keytool")));
-					//
 					for (int j = 0; nodeList2 != null && j < nodeList2.getLength(); j++) {
 						//
 						if ((node2 = nodeList2.item(j)) == null) {
