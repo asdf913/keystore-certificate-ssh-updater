@@ -170,7 +170,7 @@ public class KeyStoreCertificateSshUpdater {
 					//
 					FileUtils.writeByteArrayToFile(tempFile, IOUtils.toByteArray(is));
 					//
-				} // is
+				} // if
 					//
 				final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 				//
