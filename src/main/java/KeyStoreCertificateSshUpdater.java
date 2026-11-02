@@ -420,12 +420,13 @@ public class KeyStoreCertificateSshUpdater {
 						System.out.println(StringUtils.rightPad("filePem", length) + "="
 								+ (filePem != null ? filePem.getAbsolutePath() : null));
 						//
-						writeToPem(getEncoded(certificate), "CERTIFICATE", filePem);
+						testAndAccept(Objects::nonNull, getEncoded(certificate),
+								x -> writeToPem(x, "CERTIFICATE", filePem));
 						//
 						keyStore.setCertificateEntry(alias, certificate);
 						//
-						try (final InputStream is2 = testAndApply(Objects::nonNull, filePem, FileInputStream::new,
-								null)) {
+						try (final InputStream is2 = testAndApply(KeyStoreCertificateSshUpdater::exists, filePem,
+								FileInputStream::new, null)) {
 							//
 							if (sftpClient != null) {
 								//
