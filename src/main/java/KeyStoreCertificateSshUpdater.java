@@ -102,6 +102,8 @@ import io.github.toolfactory.narcissus.Narcissus;
 
 public class KeyStoreCertificateSshUpdater {
 
+	private static final String DELEGATE = "delegate";
+
 	public static void main(final String[] args) throws Exception {
 		//
 		final File tempFile = File.createTempFile(nextAlphabetic(RandomStringUtils.secure(), 3), null);
@@ -901,7 +903,7 @@ public class KeyStoreCertificateSshUpdater {
 		final Field field = testAndApply(x -> size(x) == 1,
 				collect(filter(
 						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
-						f -> Objects.equals(getName(f), "delegate")), Collectors.toList()),
+						f -> Objects.equals(getName(f), DELEGATE)), Collectors.toList()),
 				x -> get(x, 0), null);
 
 		//
@@ -924,7 +926,7 @@ public class KeyStoreCertificateSshUpdater {
 		final Field field = testAndApply(x -> size(x) == 1,
 				collect(filter(
 						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
-						f -> Objects.equals(getName(f), "delegate")), Collectors.toList()),
+						f -> Objects.equals(getName(f), DELEGATE)), Collectors.toList()),
 				x -> get(x, 0), null);
 
 		//
@@ -948,7 +950,7 @@ public class KeyStoreCertificateSshUpdater {
 		final Field field = testAndApply(x -> size(x) == 1,
 				collect(filter(
 						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
-						f -> Objects.equals(getName(f), "delegate")), Collectors.toList()),
+						f -> Objects.equals(getName(f), DELEGATE)), Collectors.toList()),
 				x -> get(x, 0), null);
 
 		//
