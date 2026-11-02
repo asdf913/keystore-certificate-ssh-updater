@@ -106,6 +106,8 @@ public class KeyStoreCertificateSshUpdater {
 
 	private static final String VALUE = "value";
 
+	private static final String PASSWORD = "password";
+
 	public static void main(final String[] args) throws Exception {
 		//
 		final File tempFile = File.createTempFile(nextAlphabetic(RandomStringUtils.secure(), 3), null);
@@ -156,7 +158,7 @@ public class KeyStoreCertificateSshUpdater {
 					//
 					config.basicCredentialsProvider = new BasicCredentialsImpl(
 							getNodeValue(getNamedItem(attributes, "user")),
-							getNodeValue(getNamedItem(attributes, "password")));
+							getNodeValue(getNamedItem(attributes, PASSWORD)));
 					//
 					config.publicKey = testAndApply(Objects::nonNull,
 							getNodeValue(getNamedItem(attributes, "publicKey")), File::new, null);
@@ -175,7 +177,7 @@ public class KeyStoreCertificateSshUpdater {
 							//
 						config.keyStorePathPassword = Pair.of(
 								getNodeValue(getNamedItem(attributes = getAttributes(node2), "path")),
-								getNodeValue(getNamedItem(attributes, "password")));
+								getNodeValue(getNamedItem(attributes, PASSWORD)));
 						//
 						perform(sshClient, config, tempFile, url,
 								md = testAndGet(Objects::isNull, md, () -> MessageDigest.getInstance("SHA-1")));
@@ -191,7 +193,7 @@ public class KeyStoreCertificateSshUpdater {
 				config.hostAndPort = testAndApply(Objects::nonNull, get(map, "host"),
 						x -> HostAndPort.fromParts(x, NumberUtils.toInt(get(map, "port"), 22)), null);
 				//
-				config.basicCredentialsProvider = new BasicCredentialsImpl(get(map, "user"), get(map, "password"));
+				config.basicCredentialsProvider = new BasicCredentialsImpl(get(map, "user"), get(map, PASSWORD));
 				//
 				config.publicKey = testAndApply(Objects::nonNull, get(map, "publicKey"), File::new, null);
 				//
