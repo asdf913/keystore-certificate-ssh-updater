@@ -428,12 +428,8 @@ public class KeyStoreCertificateSshUpdater {
 						try (final InputStream is2 = testAndApply(KeyStoreCertificateSshUpdater::exists, filePem,
 								FileInputStream::new, null)) {
 							//
-							if (is2 != null) {
-								//
-								put(sftpClient, is2, "/tmp/" + getName(filePem));
-								//
-							} // if
-								//
+							testAndAccept(Objects::nonNull, is2, x -> put(sftpClient, x, "/tmp/" + getName(filePem)));
+							//
 						} // try
 							//
 						final String keytool = config != null ? config.keytool : null;
