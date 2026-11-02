@@ -101,7 +101,7 @@
 							<transformers>
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>KeyStoreCertificateSshUpdater</mainClass>
+									<mainClass>org.apache.sshd.client.KeyStoreCertificateSshUpdater</mainClass>
 								</transformer>
 							</transformers>
 						</configuration>

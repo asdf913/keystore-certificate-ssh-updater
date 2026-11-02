@@ -1,3 +1,5 @@
+package org.apache.sshd.client;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
