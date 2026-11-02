@@ -63,6 +63,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.function.FailableBiFunction;
 import org.apache.commons.lang3.function.FailableConsumer;
 import org.apache.commons.lang3.function.FailableFunction;
+import org.apache.commons.lang3.function.FailableSupplier;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -168,17 +169,12 @@ public class KeyStoreCertificateSshUpdater {
 							//
 						} // if
 							//
-						if (md == null) {
-							//
-							md = MessageDigest.getInstance("SHA-1");
-							//
-						} // if
-							//
 						config.keyStorePathPassword = Pair.of(
 								getNodeValue(getNamedItem(attributes = getAttributes(node2), "path")),
 								getNodeValue(getNamedItem(attributes, "password")));
 						//
-						perform(sshClient, config, tempFile, url, md);
+						perform(sshClient, config, tempFile, url,
+								md = testAndGet(Objects::isNull, md, () -> MessageDigest.getInstance("SHA-1")));
 						//
 					} // for
 						//
@@ -205,6 +201,11 @@ public class KeyStoreCertificateSshUpdater {
 				//
 		} // try
 			//
+	}
+
+	private static <T, E extends Exception> T testAndGet(final Predicate<T> predicate, final T value,
+			final FailableSupplier<T, E> supplier) throws E {
+		return predicate != null && predicate.test(value) && supplier != null ? supplier.get() : value;
 	}
 
 	private static Node item(final NodeList instance, final int index) {

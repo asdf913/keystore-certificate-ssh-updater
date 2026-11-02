@@ -33,6 +33,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.function.FailableBiFunction;
 import org.apache.commons.lang3.function.FailableFunction;
+import org.apache.commons.lang3.function.FailableSupplier;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.sshd.client.future.AuthFuture;
 import org.apache.sshd.client.session.ClientSession;
@@ -325,6 +326,14 @@ class KeyStoreCertificateSshUpdaterTest {
 					return hasMoreElements;
 					//
 				} else if (Objects.equals(name, "nextElement")) {
+					//
+					return null;
+					//
+				} // if
+					//
+			} else if (proxy instanceof FailableSupplier) {
+				//
+				if (Objects.equals(name, "get")) {
 					//
 					return null;
 					//
