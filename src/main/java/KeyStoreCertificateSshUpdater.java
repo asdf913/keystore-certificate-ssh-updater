@@ -77,6 +77,7 @@ import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.client.session.ClientSessionCreator;
 import org.apache.sshd.common.auth.BasicCredentialsImpl;
 import org.apache.sshd.common.auth.BasicCredentialsProvider;
+import org.apache.sshd.common.auth.UsernameHolder;
 import org.apache.sshd.common.config.keys.FilePasswordProvider;
 import org.apache.sshd.common.config.keys.loader.KeyPairResourceLoader;
 import org.apache.sshd.common.future.VerifiableFuture;
@@ -273,14 +274,13 @@ public class KeyStoreCertificateSshUpdater {
 		final BasicCredentialsProvider basicCredentialsProvider = config != null ? config.basicCredentialsProvider
 				: null;
 		//
-		final String user = basicCredentialsProvider != null ? basicCredentialsProvider.getUsername() : null;
-		//
 		final Entry<String, String> keyStorePathPassword = config != null ? config.keyStorePathPassword : null;
 		//
 		final String file = getKey(keyStorePathPassword);
 		//
 		try (final ClientSession clientSession = testAndApply(
-				(a, b) -> Boolean.logicalAnd(a != null, StringUtils.isNotEmpty(b)), user, host,
+				(a, b) -> Boolean.logicalAnd(a != null, StringUtils.isNotEmpty(b)),
+				getUsername(basicCredentialsProvider), host,
 				(a, b) -> getSession(verify(connect(sshClient, a, b, port))), null)) {
 			//
 			testAndAccept(Objects::nonNull,
@@ -470,6 +470,10 @@ public class KeyStoreCertificateSshUpdater {
 				//
 		} // try
 			//
+	}
+
+	private static String getUsername(final UsernameHolder instance) {
+		return instance != null ? instance.getUsername() : null;
 	}
 
 	private static void put(final SftpClient instnace, final InputStream stream, final String path) throws IOException {

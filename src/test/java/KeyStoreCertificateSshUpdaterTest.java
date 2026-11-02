@@ -35,6 +35,7 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.sshd.client.future.AuthFuture;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.client.session.ClientSessionCreator;
+import org.apache.sshd.common.auth.UsernameHolder;
 import org.apache.sshd.common.config.keys.loader.KeyPairResourceLoader;
 import org.apache.sshd.common.future.VerifiableFuture;
 import org.apache.sshd.common.session.SessionHolder;
@@ -285,6 +286,14 @@ class KeyStoreCertificateSshUpdaterTest {
 				//
 				return null;
 				//
+			} else if (proxy instanceof UsernameHolder) {
+				//
+				if (Objects.equals(name, "getUsername")) {
+					//
+					return null;
+					//
+				} // if
+					//
 			} // if
 				//
 			throw new Throwable(name);
