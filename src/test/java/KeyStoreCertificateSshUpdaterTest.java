@@ -331,14 +331,10 @@ class KeyStoreCertificateSshUpdaterTest {
 					//
 				} // if
 					//
-			} else if (proxy instanceof FailableSupplier) {
+			} else if (proxy instanceof FailableSupplier && Objects.equals(name, "get")) {
 				//
-				if (Objects.equals(name, "get")) {
-					//
-					return null;
-					//
-				} // if
-					//
+				return null;
+				//
 			} // if
 				//
 			throw new Throwable(name);
