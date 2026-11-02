@@ -14,6 +14,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -76,7 +77,7 @@ class KeyStoreCertificateSshUpdaterTest {
 
 	private static class IH implements InvocationHandler {
 
-		private Boolean add, test, containsKey, isSuccess = null;
+		private Boolean add, test, containsKey, isSuccess, hasMoreElements = null;
 
 		private Integer size, length = null;
 
@@ -312,6 +313,18 @@ class KeyStoreCertificateSshUpdaterTest {
 					return length;
 					//
 				} else if (Objects.equals(name, "item")) {
+					//
+					return null;
+					//
+				} // if
+					//
+			} else if (proxy instanceof Enumeration) {
+				//
+				if (Objects.equals(name, "hasMoreElements")) {
+					//
+					return hasMoreElements;
+					//
+				} else if (Objects.equals(name, "nextElement")) {
 					//
 					return null;
 					//

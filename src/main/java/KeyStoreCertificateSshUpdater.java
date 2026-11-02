@@ -370,9 +370,9 @@ public class KeyStoreCertificateSshUpdater {
 					//
 					boolean found = false;
 					//
-					while (aliases != null && aliases.hasMoreElements()) {
+					while (hasMoreElements(aliases)) {
 						//
-						if ((found = Arrays.equals(getEncoded(keyStore.getCertificate(aliases.nextElement())),
+						if ((found = Arrays.equals(getEncoded(keyStore.getCertificate(nextElement(aliases))),
 								encoded))) {
 							//
 							break;
@@ -494,6 +494,14 @@ public class KeyStoreCertificateSshUpdater {
 				//
 		} // try
 			//
+	}
+
+	private static <E> E nextElement(final Enumeration<E> instance) {
+		return instance != null ? instance.nextElement() : null;
+	}
+
+	private static boolean hasMoreElements(final Enumeration<?> instance) {
+		return instance != null && instance.hasMoreElements();
 	}
 
 	private static String getPassword(final PasswordHolder instance) {
