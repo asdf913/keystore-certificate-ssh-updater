@@ -101,14 +101,10 @@ class KeyStoreCertificateSshUpdaterTest {
 					//
 				} // if
 					//
-			} else if (proxy instanceof AuthFuture) {
+			} else if (proxy instanceof AuthFuture && Objects.equals(name, "isSuccess")) {
 				//
-				if (Objects.equals(name, "isSuccess")) {
-					//
-					return isSuccess;
-					//
-				} // if
-					//
+				return isSuccess;
+				//
 			} // if
 				//
 			if (proxy instanceof Member) {
@@ -283,14 +279,10 @@ class KeyStoreCertificateSshUpdaterTest {
 					//
 				} // if
 					//
-			} else if (proxy instanceof SessionHolder) {
+			} else if (proxy instanceof SessionHolder && Objects.equals(name, "getSession")) {
 				//
-				if (Objects.equals(name, "getSession")) {
-					//
-					return null;
-					//
-				} // if
-					//
+				return null;
+				//
 			} // if
 				//
 			throw new Throwable(name);
