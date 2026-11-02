@@ -17,6 +17,7 @@ import java.rmi.RemoteException;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
@@ -359,22 +360,7 @@ public class KeyStoreCertificateSshUpdater {
 									testAndApply(Objects::nonNull, digest(md, encoded), Hex::encodeHexString, null), 2,
 									':')));
 					//
-					final Enumeration<String> aliases = keyStore.aliases();
-					//
-					boolean found = false;
-					//
-					while (hasMoreElements(aliases)) {
-						//
-						if ((found = Arrays.equals(getEncoded(keyStore.getCertificate(nextElement(aliases))),
-								encoded))) {
-							//
-							break;
-							//
-						} // if
-							//
-					} // while
-						//
-					if (found) {
+					if (contains(keyStore, encoded)) {
 						//
 						System.out.println("Certificate is found.");
 						//
@@ -487,6 +473,34 @@ public class KeyStoreCertificateSshUpdater {
 				//
 		} // try
 			//
+	}
+
+	private static boolean contains(final KeyStore instance, final byte[] encoded)
+			throws CertificateEncodingException, KeyStoreException {
+		//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "initialized")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		final Enumeration<String> aliases = instance != null && (field == null
+				|| (Objects.equals(field.getType(), Boolean.TYPE) && Narcissus.getBooleanField(instance, field)))
+						? instance.aliases()
+						: null;
+		//
+		while (hasMoreElements(aliases)) {
+			//
+			if (Arrays.equals(getEncoded(instance.getCertificate(nextElement(aliases))), encoded)) {
+				//
+				return true;
+				//
+			} // if
+				//
+		} // while
+			//
+		return false;
+		//
 	}
 
 	private static String addCharacter(final String instance, final int count, final char c) {
