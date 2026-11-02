@@ -117,7 +117,7 @@ public class KeyStoreCertificateSshUpdater {
 			//
 			if (containsKey(map, "config")) {
 				//
-				final Document document = testAndApply(x -> x != null && x.exists() && x.isFile(),
+				final Document document = testAndApply(x -> exists(x) && isFile(x),
 						testAndApply(Objects::nonNull, get(map, "config"), File::new, null),
 						x -> parse(newDocumentBuilder(DocumentBuilderFactory.newInstance()), x), null);
 				//
