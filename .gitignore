@@ -4,4 +4,5 @@
 /.settings
 /KeyStoreCertificateSshUpdater.log
 /target
+/test-output
 dependency-reduced-pom.xml

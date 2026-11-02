@@ -228,7 +228,7 @@ public class KeyStoreCertificateSshUpdater {
 	}
 
 	private static Document parse(final DocumentBuilder instance, final File file) throws SAXException, IOException {
-		return instance != null ? instance.parse(file) : null;
+		return instance != null && file != null && file.getPath() != null ? instance.parse(file) : null;
 	}
 
 	private static Object evaluate(final XPath instance, final String string, final Object object, final QName qName)
@@ -309,8 +309,8 @@ public class KeyStoreCertificateSshUpdater {
 				if (keyStore != null) {
 					//
 					try (final InputStream is2 = testAndApply(
-							x -> x != null && x.exists() && x.isFile() && x.length() > 0, tempFile,
-							FileInputStream::new, null)) {
+							x -> x != null && x.getPath() != null && x.exists() && x.isFile() && x.length() > 0,
+							tempFile, FileInputStream::new, null)) {
 						//
 						keyStore.load(is2, toCharArray(storepass));
 						//
@@ -499,16 +499,30 @@ public class KeyStoreCertificateSshUpdater {
 	}
 
 	private static String toUpperCase(final String instance) {
-		return instance != null ? instance.toUpperCase() : null;
+		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field field = testAndApply(y -> size(y) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "value")), Collectors.toList()),
+				y -> get(y, 0), null);
+		//
+		return field == null || Narcissus.getField(instance, field) != null ? instance.toUpperCase() : null;
+		//
 	}
 
-	private static void writeToPem(byte[] encodedBytes, String label, final File file) throws IOException {
+	private static void writeToPem(final byte[] encodedBytes, final String label, final File file) throws IOException {
 		//
 		final Base64.Encoder mimeEncoder = Base64.getMimeEncoder(64, new byte[] { '\n' });
 		//
 		final String base64Body = encodedBytes != null ? mimeEncoder.encodeToString(encodedBytes) : null;
 		//
-		try (final Writer writer = testAndApply(Objects::nonNull, file, FileWriter::new, null)) {
+		try (final Writer writer = testAndApply(x -> x != null && x.getPath() != null, file, FileWriter::new, null)) {
 			//
 			if (writer != null) {
 				//
@@ -539,6 +553,24 @@ public class KeyStoreCertificateSshUpdater {
 
 	private static String format(final DateFormat instance, final Date date) {
 		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "calendar")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		if (field != null && Narcissus.getField(instance, field) == null) {
+			//
+			return null;
+			//
+		} // if
+			//
 		if (instance instanceof SimpleDateFormat) {
 			//
 			return date != null ? instance.format(date) : null;
@@ -558,7 +590,21 @@ public class KeyStoreCertificateSshUpdater {
 	}
 
 	private static String nextAlphabetic(final RandomStringUtils instance, final int count) {
-		return instance != null ? instance.nextAlphabetic(count) : null;
+		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "random")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return field == null || Narcissus.getField(instance, field) != null ? instance.nextAlphabetic(count) : null;
+		//
 	}
 
 	private static String getAlgorithm(final MessageDigest instance) {
@@ -576,7 +622,7 @@ public class KeyStoreCertificateSshUpdater {
 		final Field field = testAndApply(x -> size(x) == 1,
 				collect(filter(
 						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
-						f -> Objects.equals(getName(f), "digestBuffer")), Collectors.toList()),
+						f -> Objects.equals(getName(f), "digestSpi")), Collectors.toList()),
 				x -> get(x, 0), null);
 		//
 		return field == null || Narcissus.getField(instance, field) != null ? instance.digest(input) : null;
@@ -584,7 +630,21 @@ public class KeyStoreCertificateSshUpdater {
 	}
 
 	private static byte[] getEncoded(final Certificate instance) throws CertificateEncodingException {
-		return instance != null ? instance.getEncoded() : null;
+		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "signedCert")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return field == null || Narcissus.getField(instance, field) != null ? instance.getEncoded() : null;
+		//
 	}
 
 	private static Certificate getCertfiicate(final String url) throws IOException {
