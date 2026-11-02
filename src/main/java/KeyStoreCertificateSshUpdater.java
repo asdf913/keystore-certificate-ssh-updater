@@ -191,7 +191,8 @@ public class KeyStoreCertificateSshUpdater {
 				//
 				final Config config = new Config();
 				//
-				config.hostAndPort = HostAndPort.fromParts(get(map, "host"), NumberUtils.toInt(get(map, "port"), 22));
+				config.hostAndPort = testAndApply(Objects::nonNull, get(map, "host"),
+						x -> HostAndPort.fromParts(x, NumberUtils.toInt(get(map, "port"), 22)), null);
 				//
 				config.basicCredentialsProvider = new BasicCredentialsImpl(get(map, "user"), get(map, "password"));
 				//
