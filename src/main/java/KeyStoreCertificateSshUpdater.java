@@ -428,9 +428,9 @@ public class KeyStoreCertificateSshUpdater {
 						try (final InputStream is2 = testAndApply(KeyStoreCertificateSshUpdater::exists, filePem,
 								FileInputStream::new, null)) {
 							//
-							if (sftpClient != null && is2 != null) {
+							if (is2 != null) {
 								//
-								sftpClient.put(is2, "/tmp/" + filePem.getName());
+								put(sftpClient, is2, "/tmp/" + filePem.getName());
 								//
 							} // if
 								//
@@ -472,6 +472,12 @@ public class KeyStoreCertificateSshUpdater {
 				//
 		} // try
 			//
+	}
+
+	private static void put(final SftpClient instnace, final InputStream stream, final String path) throws IOException {
+		if (instnace != null) {
+			instnace.put(stream, path);
+		}
 	}
 
 	private static void addPublicKeyIdentity(final ClientAuthenticationManager instance, final KeyPair keyPair) {

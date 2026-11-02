@@ -1,3 +1,5 @@
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
@@ -485,6 +487,10 @@ class KeyStoreCertificateSshUpdaterTest {
 				} else if (Objects.equals(parameterType, DocumentBuilderFactory.class)) {
 					//
 					add(collection, Narcissus.allocateInstance(getClass(DocumentBuilderFactory.newInstance())));
+					//
+				} else if (Objects.equals(parameterType, InputStream.class)) {
+					//
+					add(collection, new ByteArrayInputStream(new byte[] {}));
 					//
 				} else if (parameterType != null && parameterType.isInterface()) {
 					//
