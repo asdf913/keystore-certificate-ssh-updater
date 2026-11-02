@@ -419,6 +419,10 @@ class KeyStoreCertificateSshUpdaterTest {
 					//
 					add(collection, Boolean.FALSE);
 					//
+				} else if (Objects.equals(parameterType, Character.TYPE)) {
+					//
+					add(collection, Character.valueOf(' '));
+					//
 				} else {
 					//
 					add(collection, null);
