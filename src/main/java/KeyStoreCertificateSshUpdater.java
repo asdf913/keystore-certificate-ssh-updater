@@ -77,6 +77,7 @@ import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.client.session.ClientSessionCreator;
 import org.apache.sshd.common.auth.BasicCredentialsImpl;
 import org.apache.sshd.common.auth.BasicCredentialsProvider;
+import org.apache.sshd.common.auth.PasswordHolder;
 import org.apache.sshd.common.auth.UsernameHolder;
 import org.apache.sshd.common.config.keys.FilePasswordProvider;
 import org.apache.sshd.common.config.keys.loader.KeyPairResourceLoader;
@@ -299,8 +300,7 @@ public class KeyStoreCertificateSshUpdater {
 				getUsername(basicCredentialsProvider), host,
 				(a, b) -> getSession(verify(connect(sshClient, a, b, port))), null)) {
 			//
-			testAndAccept(Objects::nonNull,
-					basicCredentialsProvider != null ? basicCredentialsProvider.getPassword() : null,
+			testAndAccept(Objects::nonNull, getPassword(basicCredentialsProvider),
 					x -> addPasswordIdentity(clientSession, x));
 			//
 			testAndAccept(Objects::nonNull,
@@ -486,6 +486,10 @@ public class KeyStoreCertificateSshUpdater {
 				//
 		} // try
 			//
+	}
+
+	private static String getPassword(final PasswordHolder instance) {
+		return instance != null ? instance.getPassword() : null;
 	}
 
 	private static String getUsername(final UsernameHolder instance) {
