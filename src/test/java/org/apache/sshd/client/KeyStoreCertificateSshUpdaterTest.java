@@ -669,7 +669,7 @@ class KeyStoreCertificateSshUpdaterTest {
 	@Test
 	void testAddCharacter() throws Throwable {
 		//
-		Assert.assertEquals("12:34", addCharacter("1234", 2, ':'));
+		Assert.assertEquals(addCharacter("1234", 2, ':'), "12:34");
 		//
 	}
 
