@@ -103,12 +103,8 @@ public class KeyStoreCertificateSshUpdater {
 		//
 		final File tempFile = File.createTempFile(nextAlphabetic(RandomStringUtils.secure(), 3), null);
 		//
-		if (tempFile != null) {
-			//
-			tempFile.deleteOnExit();
-			//
-		} // if
-			//
+		deleteOnExit(tempFile);
+		//
 		try (final SshClient sshClient = SshClient.setUpDefaultClient()) {
 			//
 			start(sshClient);
@@ -209,6 +205,12 @@ public class KeyStoreCertificateSshUpdater {
 				//
 		} // try
 			//
+	}
+
+	private static void deleteOnExit(final File instance) {
+		if (instance != null && instance.getPath() != null) {
+			instance.deleteOnExit();
+		}
 	}
 
 	private static String getNodeValue(final Node instance) {
