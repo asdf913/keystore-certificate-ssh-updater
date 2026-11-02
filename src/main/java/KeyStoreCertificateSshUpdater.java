@@ -354,24 +354,10 @@ public class KeyStoreCertificateSshUpdater {
 					//
 					final byte[] encoded = getEncoded(certificate);
 					//
-					String hexString = testAndApply(Objects::nonNull, digest(md, encoded), Hex::encodeHexString, null);
-					//
-					final StringBuilder sb = new StringBuilder();
-					//
-					for (int i = 0; hexString != null && i < hexString.length(); i++) {
-						//
-						sb.append(hexString.charAt(i));
-						//
-						if (i % 2 == 1 && i < hexString.length() - 1) {
-							//
-							sb.append(':');
-							//
-						} // if
-							//
-					} // for
-						//
 					System.out.println(StringUtils.rightPad(algorithm, length) + "="
-							+ (hexString = toUpperCase(Objects.toString(sb))));
+							+ toUpperCase(addCharacter(
+									testAndApply(Objects::nonNull, digest(md, encoded), Hex::encodeHexString, null), 2,
+									':')));
 					//
 					final Enumeration<String> aliases = keyStore.aliases();
 					//
@@ -501,6 +487,50 @@ public class KeyStoreCertificateSshUpdater {
 				//
 		} // try
 			//
+	}
+
+	private static String addCharacter(final String instance, final int count, final char c) {
+		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field field = testAndApply(y -> size(y) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), VALUE)), Collectors.toList()),
+				y -> get(y, 0), null);
+		//
+		if (field != null && Narcissus.getField(instance, field) == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		StringBuilder sb = null;
+		//
+		final int length = StringUtils.length(instance);
+		//
+		for (int i = 0; instance != null && i < length; i++) {
+			//
+			if ((sb = ObjectUtils.getIfNull(sb, StringBuilder::new)) != null) {
+				//
+				sb.append(instance.charAt(i));
+				//
+			} // if
+				//
+			if (i % count == 1 && i < length - 1 && sb != null) {
+				//
+				sb.append(c);
+				//
+			} // if
+				//
+		} // for
+			//
+		return Objects.toString(sb);
+		//
 	}
 
 	private static String getHost(final HostAndPort instance) {

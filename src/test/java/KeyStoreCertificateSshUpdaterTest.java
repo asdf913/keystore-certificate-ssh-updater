@@ -58,7 +58,8 @@ import io.github.toolfactory.narcissus.Narcissus;
 
 class KeyStoreCertificateSshUpdaterTest {
 
-	private static Method METHOD_ADD, METHOD_GET_NAME, METHOD_GET_CLASS, METHOD_NEW_DOCUMENT_BUILDER = null;
+	private static Method METHOD_ADD, METHOD_GET_NAME, METHOD_GET_CLASS, METHOD_NEW_DOCUMENT_BUILDER,
+			METHOD_ADD_CHARACTER = null;
 
 	@BeforeClass
 	static void beforeClass() throws NoSuchMethodException {
@@ -72,6 +73,9 @@ class KeyStoreCertificateSshUpdaterTest {
 		(METHOD_GET_CLASS = clz.getDeclaredMethod("getClass", Object.class)).setAccessible(true);
 		//
 		(METHOD_NEW_DOCUMENT_BUILDER = clz.getDeclaredMethod("newDocumentBuilder", DocumentBuilderFactory.class))
+				.setAccessible(true);
+		//
+		(METHOD_ADD_CHARACTER = clz.getDeclaredMethod("addCharacter", String.class, Integer.TYPE, Character.TYPE))
 				.setAccessible(true);
 		//
 	}
@@ -507,6 +511,10 @@ class KeyStoreCertificateSshUpdaterTest {
 					//
 					add(collection, Boolean.FALSE);
 					//
+				} else if (Objects.equals(parameterType, Character.TYPE)) {
+					//
+					add(collection, Character.valueOf(' '));
+					//
 				} else if (Objects.equals(parameterType, Class.class)) {
 					//
 					add(collection, Class.class);
@@ -627,6 +635,27 @@ class KeyStoreCertificateSshUpdaterTest {
 				return null;
 			} else if (obj instanceof DocumentBuilder) {
 				return (DocumentBuilder) obj;
+			}
+			throw new Throwable(Objects.toString(getClass(obj)));
+		} catch (final InvocationTargetException e) {
+			throw e.getTargetException();
+		}
+	}
+
+	@Test
+	void testAddCharacter() throws Throwable {
+		//
+		Assert.assertEquals("12:34", addCharacter("1234", 2, ':'));
+		//
+	}
+
+	private static String addCharacter(final String instance, final int count, final char c) throws Throwable {
+		try {
+			final Object obj = METHOD_ADD_CHARACTER.invoke(null, instance, count, c);
+			if (obj == null) {
+				return null;
+			} else if (obj instanceof String) {
+				return (String) obj;
 			}
 			throw new Throwable(Objects.toString(getClass(obj)));
 		} catch (final InvocationTargetException e) {
