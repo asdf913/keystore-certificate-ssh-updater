@@ -1,5 +1,7 @@
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
@@ -11,6 +13,7 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,6 +38,7 @@ import org.apache.commons.lang3.function.FailableBiFunction;
 import org.apache.commons.lang3.function.FailableFunction;
 import org.apache.commons.lang3.function.FailableSupplier;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.apache.sshd.client.channel.ClientChannel;
 import org.apache.sshd.client.future.AuthFuture;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.client.session.ClientSessionCreator;
@@ -339,6 +343,14 @@ class KeyStoreCertificateSshUpdaterTest {
 				//
 				return null;
 				//
+			} else if (proxy instanceof ClientChannel) {
+				//
+				if (Objects.equals(name, "open")) {
+					//
+					return null;
+					//
+				} // if
+					//
 			} // if
 				//
 			throw new Throwable(name);
@@ -554,9 +566,17 @@ class KeyStoreCertificateSshUpdaterTest {
 					//
 					add(collection, new ByteArrayInputStream(new byte[] {}));
 					//
+				} else if (Objects.equals(parameterType, OutputStream.class)) {
+					//
+					add(collection, new ByteArrayOutputStream());
+					//
 				} else if (Objects.equals(parameterType, XPathFactory.class)) {
 					//
 					add(collection, Narcissus.allocateInstance(getClass(XPathFactory.newInstance())));
+					//
+				} else if (Objects.equals(parameterType, Duration.class)) {
+					//
+					add(collection, Narcissus.allocateInstance(getClass(Duration.ofSeconds(0))));
 					//
 				} else if (parameterType != null && parameterType.isInterface()) {
 					//

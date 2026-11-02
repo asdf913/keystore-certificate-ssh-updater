@@ -72,6 +72,7 @@ import org.apache.commons.validator.routines.DomainValidator;
 import org.apache.sshd.client.ClientAuthenticationManager;
 import org.apache.sshd.client.SshClient;
 import org.apache.sshd.client.channel.ChannelExec;
+import org.apache.sshd.client.channel.ClientChannel;
 import org.apache.sshd.client.future.AuthFuture;
 import org.apache.sshd.client.future.ConnectFuture;
 import org.apache.sshd.client.future.OpenFuture;
@@ -388,19 +389,15 @@ public class KeyStoreCertificateSshUpdater {
 										final OutputStream out = new ByteArrayOutputStream();
 										final OutputStream err = new ByteArrayOutputStream()) {
 									//
-									if (channel != null) {
-										//
-										channel.setOut(out);
-										//
-										channel.setErr(err);
-										//
-										final OpenFuture openFuture = channel.open().verify(Duration.ofSeconds(5));
-										//
-										System.out.println(StringUtils.rightPad("opened", length) + "="
-												+ (openFuture != null ? openFuture.isOpened() : null));
-										//
-									} // if
-										//
+									setOut(channel, out);
+									//
+									setErr(channel, err);
+									//
+									final OpenFuture openFuture = verify(open(channel), Duration.ofSeconds(5));
+									//
+									System.out.println(StringUtils.rightPad("opened", length) + "="
+											+ (openFuture != null ? openFuture.isOpened() : null));
+									//
 								} // try
 									//
 							} // if
@@ -448,19 +445,15 @@ public class KeyStoreCertificateSshUpdater {
 								final OutputStream out = new ByteArrayOutputStream();
 								final OutputStream err = new ByteArrayOutputStream()) {
 							//
-							if (channel != null) {
-								//
-								channel.setOut(out);
-								//
-								channel.setErr(err);
-								//
-								final OpenFuture openFuture = channel.open().verify(Duration.ofSeconds(5));
-								//
-								System.out.println(StringUtils.rightPad("opened", length) + "="
-										+ (openFuture != null ? openFuture.isOpened() : null));
-								//
-							} // if
-								//
+							setOut(channel, out);
+							//
+							setErr(channel, err);
+							//
+							final OpenFuture openFuture = verify(open(channel), Duration.ofSeconds(5));
+							//
+							System.out.println(StringUtils.rightPad("opened", length) + "="
+									+ (openFuture != null ? openFuture.isOpened() : null));
+							//
 						} // try
 							//
 						System.err.println("Certificate is added.");
@@ -473,6 +466,26 @@ public class KeyStoreCertificateSshUpdater {
 				//
 		} // try
 			//
+	}
+
+	private static <T> T verify(final VerifiableFuture<T> instance, final Duration timeout) throws IOException {
+		return instance != null ? instance.verify(timeout) : null;
+	}
+
+	private static OpenFuture open(final ClientChannel instance) throws IOException {
+		return instance != null ? instance.open() : null;
+	}
+
+	private static void setErr(final ClientChannel instance, final OutputStream err) {
+		if (instance != null) {
+			instance.setErr(err);
+		}
+	}
+
+	private static void setOut(final ClientChannel instance, final OutputStream out) {
+		if (instance != null) {
+			instance.setOut(out);
+		}
 	}
 
 	private static boolean contains(final KeyStore instance, final byte[] encoded)
