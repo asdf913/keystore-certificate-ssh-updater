@@ -428,7 +428,7 @@ public class KeyStoreCertificateSshUpdater {
 						try (final InputStream is2 = testAndApply(KeyStoreCertificateSshUpdater::exists, filePem,
 								FileInputStream::new, null)) {
 							//
-							if (sftpClient != null) {
+							if (sftpClient != null && is2 != null) {
 								//
 								sftpClient.put(is2, "/tmp/" + filePem.getName());
 								//
