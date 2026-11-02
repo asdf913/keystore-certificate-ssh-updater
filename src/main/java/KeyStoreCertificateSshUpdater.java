@@ -577,7 +577,7 @@ public class KeyStoreCertificateSshUpdater {
 			//
 		} // if
 			//
-		return instance != null ? instance.format(date) : null;
+		return instance.format(date);
 		//
 	}
 
