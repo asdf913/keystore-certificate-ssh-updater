@@ -293,7 +293,7 @@ public class KeyStoreCertificateSshUpdater {
 		//
 		final HostAndPort hostAndPort = config != null ? config.hostAndPort : null;
 		//
-		final String host = hostAndPort != null ? hostAndPort.getHost() : null;
+		final String host = getHost(hostAndPort);
 		//
 		final int port = hostAndPort != null && hostAndPort.hasPort() ? hostAndPort.getPort() : 22;
 		//
@@ -495,6 +495,10 @@ public class KeyStoreCertificateSshUpdater {
 				//
 		} // try
 			//
+	}
+
+	private static String getHost(final HostAndPort instance) {
+		return instance != null ? instance.getHost() : null;
 	}
 
 	private static <E> E nextElement(final Enumeration<E> instance) {
