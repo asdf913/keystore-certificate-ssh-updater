@@ -418,8 +418,7 @@ public class KeyStoreCertificateSshUpdater {
 						//
 						final File filePem = new File(String.join(".", alias, "pem"));
 						//
-						System.out.println(StringUtils.rightPad("filePem", length) + "="
-								+ (filePem != null ? filePem.getAbsolutePath() : null));
+						System.out.println(StringUtils.rightPad("filePem", length) + "=" + getAbsolutePath(filePem));
 						//
 						testAndAccept(Objects::nonNull, getEncoded(certificate),
 								x -> writeToPem(x, "CERTIFICATE", filePem));
@@ -1105,6 +1104,10 @@ public class KeyStoreCertificateSshUpdater {
 
 	private static String getName(final File instance) {
 		return instance != null && instance.getPath() != null ? instance.getName() : null;
+	}
+
+	private static String getAbsolutePath(final File instance) {
+		return instance != null && instance.getPath() != null ? instance.getAbsolutePath() : null;
 	}
 
 	private static <T, R, A> R collect(final Stream<T> instance, final Collector<? super T, A, R> collector) {
