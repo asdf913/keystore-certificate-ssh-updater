@@ -430,7 +430,7 @@ public class KeyStoreCertificateSshUpdater {
 							//
 							if (is2 != null) {
 								//
-								put(sftpClient, is2, "/tmp/" + filePem.getName());
+								put(sftpClient, is2, "/tmp/" + getName(filePem));
 								//
 							} // if
 								//
@@ -1104,6 +1104,10 @@ public class KeyStoreCertificateSshUpdater {
 
 	private static String getName(final Member instance) {
 		return instance != null ? instance.getName() : null;
+	}
+
+	private static String getName(final File instance) {
+		return instance != null && instance.getPath() != null ? instance.getName() : null;
 	}
 
 	private static <T, R, A> R collect(final Stream<T> instance, final Collector<? super T, A, R> collector) {
