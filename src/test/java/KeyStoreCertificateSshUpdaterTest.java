@@ -48,6 +48,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import com.google.common.reflect.Reflection;
 
@@ -77,7 +78,7 @@ class KeyStoreCertificateSshUpdaterTest {
 
 		private Boolean add, test, containsKey, isSuccess = null;
 
-		private Integer size = null;
+		private Integer size, length = null;
 
 		@Override
 		public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
@@ -299,6 +300,18 @@ class KeyStoreCertificateSshUpdaterTest {
 			} else if (proxy instanceof PasswordHolder) {
 				//
 				if (Objects.equals(name, "getPassword")) {
+					//
+					return null;
+					//
+				} // if
+					//
+			} else if (proxy instanceof NodeList) {
+				//
+				if (Objects.equals(name, "getLength")) {
+					//
+					return length;
+					//
+				} else if (Objects.equals(name, "item")) {
 					//
 					return null;
 					//

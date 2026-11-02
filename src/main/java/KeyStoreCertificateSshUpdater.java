@@ -137,9 +137,9 @@ public class KeyStoreCertificateSshUpdater {
 				//
 				final String url = get(map, "url");
 				//
-				for (int i = 0; nodeList1 != null && i < nodeList1.getLength(); i++) {
+				for (int i = 0; i < getLength(nodeList1); i++) {
 					//
-					if ((node1 = nodeList1.item(i)) == null) {
+					if ((node1 = item(nodeList1, i)) == null) {
 						//
 						continue;
 						//
@@ -160,9 +160,9 @@ public class KeyStoreCertificateSshUpdater {
 					//
 					nodeList2 = cast(NodeList.class, evaluate(xp, "*/keystore", node1, XPathConstants.NODESET));
 					//
-					for (int j = 0; nodeList2 != null && j < nodeList2.getLength(); j++) {
+					for (int j = 0; j < getLength(nodeList2); j++) {
 						//
-						if ((node2 = nodeList2.item(j)) == null) {
+						if ((node2 = item(nodeList2, j)) == null) {
 							//
 							continue;
 							//
@@ -205,6 +205,14 @@ public class KeyStoreCertificateSshUpdater {
 				//
 		} // try
 			//
+	}
+
+	private static Node item(final NodeList instance, final int index) {
+		return instance != null ? instance.item(index) : null;
+	}
+
+	private static int getLength(final NodeList instance) {
+		return instance != null ? instance.getLength() : 0;
 	}
 
 	private static XPath newXPath(final XPathFactory instance) {
