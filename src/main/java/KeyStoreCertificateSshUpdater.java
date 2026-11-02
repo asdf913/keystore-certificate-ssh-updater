@@ -8,6 +8,8 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
@@ -64,7 +66,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.function.FailableBiFunction;
 import org.apache.commons.lang3.function.FailableConsumer;
 import org.apache.commons.lang3.function.FailableFunction;
-import org.apache.commons.lang3.function.FailableSupplier;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -182,7 +183,7 @@ public class KeyStoreCertificateSshUpdater {
 								getNodeValue(getNamedItem(attributes, PASSWORD)));
 						//
 						perform(sshClient, config, tempFile, url,
-								md = testAndGet(Objects::isNull, md, () -> MessageDigest.getInstance("SHA-1")));
+								md = ObjectUtils.getIfNull(md, () -> getMessageDigest("SHA-1")));
 						//
 					} // for
 						//
@@ -203,7 +204,7 @@ public class KeyStoreCertificateSshUpdater {
 				//
 				config.keyStorePathPassword = Pair.of(get(map, "keystore"), get(map, "storepass"));
 				//
-				perform(sshClient, config, tempFile, get(map, "url"), MessageDigest.getInstance("SHA-1"));
+				perform(sshClient, config, tempFile, get(map, "url"), getMessageDigest("SHA-1"));
 				//
 			} // if
 				//
@@ -211,9 +212,47 @@ public class KeyStoreCertificateSshUpdater {
 			//
 	}
 
-	private static <T, E extends Exception> T testAndGet(final Predicate<T> predicate, final T value,
-			final FailableSupplier<T, E> supplier) throws E {
-		return predicate != null && predicate.test(value) && supplier != null ? supplier.get() : value;
+	private static MessageDigest getMessageDigest(final String name) {
+		//
+		final List<Method> ms = collect(
+				filter(testAndApply(Objects::nonNull, MessageDigest.class.getDeclaredMethods(), Arrays::stream, null),
+						m -> Boolean.logicalAnd(Objects.equals(getName(m), "getInstance"), Arrays
+								.equals(m != null ? m.getParameterTypes() : null, new Class<?>[] { String.class }))),
+				Collectors.toList());
+		//
+		if (size(ms) > 1) {
+			//
+			throw new RuntimeException();
+			//
+		} else if (ms == null || ms.isEmpty()) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Method m = testAndApply(x -> size(x) == 1, ms, x -> get(x, 0), null);
+		//
+		if (m == null) {
+			//
+			return null;
+			//
+		} else if (Modifier.isStatic(m.getModifiers())) {
+			//
+			final Field field = testAndApply(y -> size(y) == 1,
+					collect(filter(
+							stream(testAndApply(Objects::nonNull, getClass(name), FieldUtils::getAllFieldsList, null)),
+							f -> Objects.equals(getName(f), VALUE)), Collectors.toList()),
+					y -> get(y, 0), null);
+			//
+			return cast(MessageDigest.class,
+					name != null && (field == null || Narcissus.getField(name, field) != null)
+							? Narcissus.invokeStaticMethod(m, name)
+							: null);
+			//
+		} // if
+			//
+		throw new RuntimeException();
+		//
 	}
 
 	private static Node item(final NodeList instance, final int index) {
