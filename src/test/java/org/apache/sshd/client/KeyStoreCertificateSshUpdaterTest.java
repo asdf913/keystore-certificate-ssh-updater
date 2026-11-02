@@ -345,14 +345,10 @@ class KeyStoreCertificateSshUpdaterTest {
 				//
 				return null;
 				//
-			} else if (proxy instanceof ClientChannel) {
+			} else if (proxy instanceof ClientChannel && Objects.equals(name, "open")) {
 				//
-				if (Objects.equals(name, "open")) {
-					//
-					return null;
-					//
-				} // if
-					//
+				return null;
+				//
 			} // if
 				//
 			throw new Throwable(name);
