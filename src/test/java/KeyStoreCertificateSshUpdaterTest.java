@@ -26,6 +26,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -500,6 +501,10 @@ class KeyStoreCertificateSshUpdaterTest {
 				} else if (Objects.equals(parameterType, InputStream.class)) {
 					//
 					add(collection, new ByteArrayInputStream(new byte[] {}));
+					//
+				} else if (Objects.equals(parameterType, XPathFactory.class)) {
+					//
+					add(collection, Narcissus.allocateInstance(getClass(XPathFactory.newInstance())));
 					//
 				} else if (parameterType != null && parameterType.isInterface()) {
 					//

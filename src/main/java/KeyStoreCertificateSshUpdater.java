@@ -119,9 +119,7 @@ public class KeyStoreCertificateSshUpdater {
 						testAndApply(Objects::nonNull, get(map, "config"), File::new, null),
 						x -> parse(newDocumentBuilder(DocumentBuilderFactory.newInstance()), x), null);
 				//
-				final XPathFactory xpf = XPathFactory.newInstance();
-				//
-				final XPath xp = xpf != null ? xpf.newXPath() : null;
+				final XPath xp = newXPath(XPathFactory.newInstance());
 				//
 				final NodeList nodeList1 = cast(NodeList.class,
 						evaluate(xp, "/*/config", document, XPathConstants.NODESET));
@@ -206,6 +204,24 @@ public class KeyStoreCertificateSshUpdater {
 				//
 		} // try
 			//
+	}
+
+	private static XPath newXPath(final XPathFactory instance) {
+		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "_featureManager")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return field == null || Narcissus.getField(instance, field) != null ? instance.newXPath() : null;
+		//
 	}
 
 	private static void deleteOnExit(final File instance) {
