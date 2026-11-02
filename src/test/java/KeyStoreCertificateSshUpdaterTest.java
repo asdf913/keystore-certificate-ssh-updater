@@ -598,8 +598,6 @@ class KeyStoreCertificateSshUpdaterTest {
 					//
 				} else {
 					//
-					System.out.println(parameterType);
-					//
 					add(collection, Narcissus.allocateInstance(parameterType));
 					//
 				} // if
