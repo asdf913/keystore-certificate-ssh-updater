@@ -132,14 +132,10 @@ class KeyStoreCertificateSshUpdaterTest {
 					//
 				} // if
 					//
-			} else if (proxy instanceof Member) {
+			} else if (proxy instanceof Member && Objects.equals(name, "getModifiers")) {
 				//
-				if (Objects.equals(name, "getModifiers")) {
-					//
-					return modifiers;
-					//
-				} // if
-					//
+				return modifiers;
+				//
 			} // if
 				//
 			if (proxy instanceof Member) {
