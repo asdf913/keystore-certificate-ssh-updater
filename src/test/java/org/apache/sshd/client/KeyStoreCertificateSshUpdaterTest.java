@@ -42,6 +42,7 @@ import org.apache.commons.lang3.function.FailableSupplier;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.sshd.client.channel.ClientChannel;
 import org.apache.sshd.client.future.AuthFuture;
+import org.apache.sshd.client.future.OpenFuture;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.client.session.ClientSessionCreator;
 import org.apache.sshd.common.auth.PasswordHolder;
@@ -88,7 +89,7 @@ class KeyStoreCertificateSshUpdaterTest {
 
 	private static class IH implements InvocationHandler {
 
-		private Boolean add, test, containsKey, isSuccess, hasMoreElements = null;
+		private Boolean add, test, containsKey, isSuccess, hasMoreElements, isOpened = null;
 
 		private Integer size, length = null;
 
@@ -123,6 +124,14 @@ class KeyStoreCertificateSshUpdaterTest {
 				//
 				return isSuccess;
 				//
+			} else if (proxy instanceof OpenFuture) {
+				//
+				if (Objects.equals(name, "isOpened")) {
+					//
+					return isOpened;
+					//
+				} // if
+					//
 			} // if
 				//
 			if (proxy instanceof Member) {
@@ -616,7 +625,9 @@ class KeyStoreCertificateSshUpdaterTest {
 					|| Boolean.logicalAnd(Objects.equals(name = getName(m), "getClass"),
 							Arrays.equals(parameterTypes, new Class<?>[] { Object.class }))
 					|| Boolean.logicalAnd(Objects.equals(name, "filter"),
-							Arrays.equals(parameterTypes, new Class<?>[] { Stream.class, Predicate.class }))) {
+							Arrays.equals(parameterTypes, new Class<?>[] { Stream.class, Predicate.class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "isOpened"),
+							Arrays.equals(parameterTypes, new Class<?>[] { OpenFuture.class }))) {
 				//
 				Assert.assertNotNull(result, toString);
 				//

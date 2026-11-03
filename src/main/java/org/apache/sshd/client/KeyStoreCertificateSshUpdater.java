@@ -464,10 +464,8 @@ public class KeyStoreCertificateSshUpdater {
 								//
 								setErr(channel, err);
 								//
-								final OpenFuture openFuture = verify(open(channel), Duration.ofSeconds(5));
-								//
 								info(logger, "{}={}", StringUtils.rightPad("opened", length),
-										openFuture != null ? openFuture.isOpened() : null);
+										isOpened(verify(open(channel), Duration.ofSeconds(5))));
 								//
 							} // try
 								//
@@ -519,10 +517,8 @@ public class KeyStoreCertificateSshUpdater {
 						//
 						setErr(channel, err);
 						//
-						final OpenFuture openFuture = verify(open(channel), Duration.ofSeconds(5));
-						//
 						info(logger, "{}={}", StringUtils.rightPad("opened", length),
-								openFuture != null ? openFuture.isOpened() : null);
+								isOpened(verify(open(channel), Duration.ofSeconds(5))));
 						//
 					} // try
 						//
@@ -534,6 +530,10 @@ public class KeyStoreCertificateSshUpdater {
 				//
 		} // try
 			//
+	}
+
+	private static Boolean isOpened(final OpenFuture instance) {
+		return instance != null ? Boolean.valueOf(instance.isOpened()) : null;
 	}
 
 	private static String getMessage(final Throwable instance) {
