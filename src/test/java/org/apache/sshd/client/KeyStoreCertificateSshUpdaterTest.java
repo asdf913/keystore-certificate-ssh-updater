@@ -91,7 +91,7 @@ class KeyStoreCertificateSshUpdaterTest {
 
 		private Boolean add, test, containsKey, isSuccess, hasMoreElements, isOpened = null;
 
-		private Integer size, length = null;
+		private Integer size, length, modifiers = null;
 
 		@Override
 		public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
@@ -129,6 +129,14 @@ class KeyStoreCertificateSshUpdaterTest {
 				if (Objects.equals(name, "isOpened")) {
 					//
 					return isOpened;
+					//
+				} // if
+					//
+			} else if (proxy instanceof Member) {
+				//
+				if (Objects.equals(name, "getModifiers")) {
+					//
+					return modifiers;
 					//
 				} // if
 					//

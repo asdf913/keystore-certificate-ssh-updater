@@ -132,9 +132,10 @@ public class KeyStoreCertificateSshUpdater {
 			//
 		} // if
 			//
-		final File tempFile = cast(File.class, testAndApply(x -> x != null && Modifier.isStatic(x.getModifiers()),
-				testAndApply(x -> size(x) == 1, ms, x -> get(x, 0), null),
-				x -> Narcissus.invokeStaticMethod(x, nextAlphabetic(RandomStringUtils.secure(), 3), null), null));
+		final File tempFile = cast(File.class,
+				testAndApply(x -> isStatic(x), testAndApply(x -> size(x) == 1, ms, x -> get(x, 0), null),
+						x -> Narcissus.invokeStaticMethod(x, nextAlphabetic(RandomStringUtils.secure(), 3), null),
+						null));
 		//
 		deleteOnExit(tempFile);
 		//
@@ -233,6 +234,10 @@ public class KeyStoreCertificateSshUpdater {
 			//
 	}
 
+	private static boolean isStatic(final Member instance) {
+		return instance != null && Modifier.isStatic(instance.getModifiers());
+	}
+
 	private static Class<?>[] getParameterTypes(final Method instance) {
 		//
 		if (instance == null) {
@@ -277,7 +282,7 @@ public class KeyStoreCertificateSshUpdater {
 			//
 			return null;
 			//
-		} else if (Modifier.isStatic(m.getModifiers())) {
+		} else if (isStatic(m)) {
 			//
 			final Field field = testAndApply(y -> size(y) == 1,
 					collect(filter(
