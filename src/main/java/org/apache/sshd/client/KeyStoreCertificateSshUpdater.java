@@ -746,12 +746,40 @@ public class KeyStoreCertificateSshUpdater {
 		//
 	}
 
-	private static Date getNotBefore(final X509Certificate instnace) {
-		return instnace != null ? instnace.getNotBefore() : null;
+	private static Date getNotBefore(final X509Certificate instance) {
+		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "info")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return field == null || Narcissus.getField(instance, field) != null ? instance.getNotBefore() : null;
+		//
 	}
 
-	private static Date getNotAfter(final X509Certificate instnace) {
-		return instnace != null ? instnace.getNotAfter() : null;
+	private static Date getNotAfter(final X509Certificate instance) {
+		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "info")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return field == null || Narcissus.getField(instance, field) != null ? instance.getNotAfter() : null;
+		//
 	}
 
 	private static String nextAlphabetic(final RandomStringUtils instance, final int count) {
