@@ -82,6 +82,7 @@ import org.apache.sshd.client.future.ConnectFuture;
 import org.apache.sshd.client.future.OpenFuture;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.client.session.ClientSessionCreator;
+import org.apache.sshd.common.SshConstants;
 import org.apache.sshd.common.auth.BasicCredentialsImpl;
 import org.apache.sshd.common.auth.BasicCredentialsProvider;
 import org.apache.sshd.common.auth.PasswordHolder;
@@ -412,7 +413,8 @@ public class KeyStoreCertificateSshUpdater {
 		//
 		final String host = getHost(hostAndPort);
 		//
-		final int port = hostAndPort != null && hostAndPort.hasPort() ? hostAndPort.getPort() : 22;
+		final int port = hostAndPort != null && hostAndPort.hasPort() ? hostAndPort.getPort()
+				: SshConstants.DEFAULT_PORT;
 		//
 		final BasicCredentialsProvider basicCredentialsProvider = config != null ? config.basicCredentialsProvider
 				: null;
