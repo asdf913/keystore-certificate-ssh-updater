@@ -389,6 +389,14 @@ public class KeyStoreCertificateSshUpdater {
 
 		private Entry<String, String> keyStorePathPassword = null;
 
+		private String getKeytool() {
+			return keytool;
+		}
+
+		private static String getKeytool(final Config instnace) {
+			return instnace != null ? instnace.getKeytool() : null;
+		}
+
 	}
 
 	private static void perform(final SshClient sshClient, final Config config, final File tempFile, final String url,
@@ -528,7 +536,7 @@ public class KeyStoreCertificateSshUpdater {
 						//
 					} // try
 						//
-					final String keytool = config != null ? config.keytool : null;
+					final String keytool = Config.getKeytool(config);
 					//
 					info(logger, "{}={}", StringUtils.rightPad("keytool", length), keytool);
 					//
