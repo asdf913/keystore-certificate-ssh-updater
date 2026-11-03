@@ -67,6 +67,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.function.FailableBiConsumer;
 import org.apache.commons.lang3.function.FailableBiFunction;
 import org.apache.commons.lang3.function.FailableConsumer;
 import org.apache.commons.lang3.function.FailableFunction;
@@ -425,13 +426,11 @@ public class KeyStoreCertificateSshUpdater {
 					? createSftpClient(SftpClientFactory.instance(), clientSession)
 					: null; final InputStream is = read(sftpClient, file)) {
 				//
-				if (Boolean.logicalAnd(is != null, and(tempFile, KeyStoreCertificateSshUpdater::exists,
-						KeyStoreCertificateSshUpdater::canWrite))) {
-					//
-					FileUtils.writeByteArrayToFile(tempFile, IOUtils.toByteArray(is));
-					//
-				} // if
-					//
+				testAndAccept(
+						(a, b) -> Boolean.logicalAnd(b != null,
+								and(a, KeyStoreCertificateSshUpdater::exists, KeyStoreCertificateSshUpdater::canWrite)),
+						tempFile, is, (a, b) -> FileUtils.writeByteArrayToFile(a, IOUtils.toByteArray(b)));
+				//
 				final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 				//
 				final String storepass = getValue(keyStorePathPassword);
@@ -1223,6 +1222,13 @@ public class KeyStoreCertificateSshUpdater {
 
 	private static InputStream read(final SftpClient instnace, final String path) throws IOException {
 		return instnace != null && path != null ? instnace.read(path) : null;
+	}
+
+	private static <T, U, E extends Exception> void testAndAccept(final BiPredicate<T, U> predicate, final T t,
+			final U u, final FailableBiConsumer<T, U, E> consumer) throws E {
+		if (predicate != null && predicate.test(t, u) && consumer != null) {
+			consumer.accept(t, u);
+		}
 	}
 
 	private static <T, E extends Exception> void testAndAccept(final Predicate<T> predicate, final T value,
