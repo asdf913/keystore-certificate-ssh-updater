@@ -463,7 +463,7 @@ public class KeyStoreCertificateSshUpdater {
 						//
 						if (logger != null) {
 							//
-							logger.error(e != null ? e.getMessage() : null, e);
+							logger.error(getMessage(e), e);
 							//
 						} // if
 							//
@@ -524,6 +524,10 @@ public class KeyStoreCertificateSshUpdater {
 				//
 		} // try
 			//
+	}
+
+	private static String getMessage(final Throwable instance) {
+		return instance != null ? instance.getMessage() : null;
 	}
 
 	private static void setCertificateEntry(final KeyStore instance, final String alias, final Certificate cert)
