@@ -118,6 +118,8 @@ public class KeyStoreCertificateSshUpdater {
 
 	private static final String PASSWORD = "password";
 
+	private static final String KEYTOOL = "keytool";
+
 	public static void main(final String[] args) throws Exception {
 		//
 		final List<Method> ms = collect(
@@ -188,7 +190,7 @@ public class KeyStoreCertificateSshUpdater {
 					config.publicKey = testAndApply(Objects::nonNull,
 							getNodeValue(getNamedItem(attributes, "publicKey")), File::new, null);
 					//
-					config.keytool = getNodeValue(getNamedItem(attributes, "keytool"));
+					config.keytool = getNodeValue(getNamedItem(attributes, KEYTOOL));
 					//
 					nodeList2 = cast(NodeList.class, evaluate(xp, "*/keystore", node1, XPathConstants.NODESET));
 					//
@@ -222,7 +224,7 @@ public class KeyStoreCertificateSshUpdater {
 				//
 				config.publicKey = testAndApply(Objects::nonNull, get(map, "publicKey"), File::new, null);
 				//
-				config.keytool = get(map, "keytool");
+				config.keytool = get(map, KEYTOOL);
 				//
 				config.keyStorePathPassword = Pair.of(get(map, "keystore"), get(map, "storepass"));
 				//
@@ -542,7 +544,7 @@ public class KeyStoreCertificateSshUpdater {
 						//
 					final String keytool = Config.getKeytool(config);
 					//
-					info(logger, format, StringUtils.rightPad("keytool", length), keytool);
+					info(logger, format, StringUtils.rightPad(KEYTOOL, length), keytool);
 					//
 					try (final ChannelExec channel = createExecChannel(clientSession,
 							String.join("", "sudo ", keytool, " -import -keystore ", file, " -storepass ", storepass,
