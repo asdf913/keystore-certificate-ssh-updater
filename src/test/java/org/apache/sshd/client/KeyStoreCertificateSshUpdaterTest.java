@@ -227,11 +227,7 @@ class KeyStoreCertificateSshUpdaterTest {
 					//
 			} else if (proxy instanceof Node) {
 				//
-				if (Objects.equals(name, "getAttributes")) {
-					//
-					return null;
-					//
-				} else if (Objects.equals(name, "getNodeValue")) {
+				if (contains(Arrays.asList("getAttributes", "getNodeValue"), name)) {
 					//
 					return null;
 					//
