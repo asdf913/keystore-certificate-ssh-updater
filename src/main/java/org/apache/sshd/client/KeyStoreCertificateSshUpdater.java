@@ -119,7 +119,21 @@ public class KeyStoreCertificateSshUpdater {
 
 	public static void main(final String[] args) throws Exception {
 		//
-		final File tempFile = File.createTempFile(nextAlphabetic(RandomStringUtils.secure(), 3), null);
+		final List<Method> ms = collect(filter(
+				testAndApply(Objects::nonNull, File.class.getDeclaredMethods(), Arrays::stream, null),
+				m -> Boolean.logicalAnd(Objects.equals(getName(m), "createTempFile"), Arrays.equals(
+						m != null ? m.getParameterTypes() : null, new Class<?>[] { String.class, String.class }))),
+				Collectors.toList());
+		//
+		if (size(ms) > 1) {
+			//
+			throw new RuntimeException();
+			//
+		} // if
+			//
+		final File tempFile = cast(File.class, testAndApply(x -> x != null && Modifier.isStatic(x.getModifiers()),
+				testAndApply(x -> size(x) == 1, ms, x -> get(x, 0), null),
+				x -> Narcissus.invokeStaticMethod(x, nextAlphabetic(RandomStringUtils.secure(), 3), null), null));
 		//
 		deleteOnExit(tempFile);
 		//
