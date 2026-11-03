@@ -460,7 +460,9 @@ public class KeyStoreCertificateSshUpdater {
 				//
 				final byte[] encoded = getEncoded(certificate);
 				//
-				info(logger, "{}={}", StringUtils.rightPad(algorithm, length),
+				final String format = "{}={}";
+				//
+				info(logger, format, StringUtils.rightPad(algorithm, length),
 						toUpperCase(addCharacter(
 								testAndApply(Objects::nonNull, digest(md, encoded), Hex::encodeHexString, null), 2,
 								':')));
@@ -478,7 +480,7 @@ public class KeyStoreCertificateSshUpdater {
 										"[ -w " + file + " ] && echo \"Writable\" || echo \"Not Writable\"")),
 								"Writable")) {
 							//
-							info(logger, "{}={}", StringUtils.rightPad("backup", length),
+							info(logger, format, StringUtils.rightPad("backup", length),
 									StringUtils.trim(executeRemoteCommand(clientSession, String.join(
 											String.join("", "echo ", file, ".`date -r ", file, " +%Y%m%d_%H%M%S`")))));
 							//
@@ -497,7 +499,7 @@ public class KeyStoreCertificateSshUpdater {
 								//
 								setErr(channel, err);
 								//
-								info(logger, "{}={}", StringUtils.rightPad("opened", length),
+								info(logger, format, StringUtils.rightPad("opened", length),
 										isOpened(verify(open(channel), Duration.ofSeconds(5))));
 								//
 							} // try
@@ -518,11 +520,11 @@ public class KeyStoreCertificateSshUpdater {
 							StringUtils.substringAfter(getName(getSubjectX500Principal(x509Certificate)), '='),
 							format(df, getNotBefore(x509Certificate)), format(df, getNotAfter(x509Certificate)));
 					//
-					info(logger, "{}={}", StringUtils.rightPad("alias", length), alias);
+					info(logger, format, StringUtils.rightPad("alias", length), alias);
 					//
 					final File filePem = new File(String.join(".", alias, "pem"));
 					//
-					info(logger, "{}={}", StringUtils.rightPad("filePem", length), getAbsolutePath(filePem));
+					info(logger, format, StringUtils.rightPad("filePem", length), getAbsolutePath(filePem));
 					//
 					testAndAccept(Objects::nonNull, getEncoded(certificate),
 							x -> writeToPem(x, "CERTIFICATE", filePem));
@@ -538,7 +540,7 @@ public class KeyStoreCertificateSshUpdater {
 						//
 					final String keytool = Config.getKeytool(config);
 					//
-					info(logger, "{}={}", StringUtils.rightPad("keytool", length), keytool);
+					info(logger, format, StringUtils.rightPad("keytool", length), keytool);
 					//
 					try (final ChannelExec channel = createExecChannel(clientSession,
 							String.join("", "sudo ", keytool, " -import -keystore ", file, " -storepass ", storepass,
@@ -550,7 +552,7 @@ public class KeyStoreCertificateSshUpdater {
 						//
 						setErr(channel, err);
 						//
-						info(logger, "{}={}", StringUtils.rightPad("opened", length),
+						info(logger, format, StringUtils.rightPad("opened", length),
 								isOpened(verify(open(channel), Duration.ofSeconds(5))));
 						//
 					} // try
