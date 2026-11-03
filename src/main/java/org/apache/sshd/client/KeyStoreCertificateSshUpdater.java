@@ -119,10 +119,10 @@ public class KeyStoreCertificateSshUpdater {
 
 	public static void main(final String[] args) throws Exception {
 		//
-		final List<Method> ms = collect(filter(
-				testAndApply(Objects::nonNull, File.class.getDeclaredMethods(), Arrays::stream, null),
-				m -> Boolean.logicalAnd(Objects.equals(getName(m), "createTempFile"), Arrays.equals(
-						m != null ? m.getParameterTypes() : null, new Class<?>[] { String.class, String.class }))),
+		final List<Method> ms = collect(
+				filter(testAndApply(Objects::nonNull, File.class.getDeclaredMethods(), Arrays::stream, null),
+						m -> Boolean.logicalAnd(Objects.equals(getName(m), "createTempFile"),
+								Arrays.equals(getParameterTypes(m), new Class<?>[] { String.class, String.class }))),
 				Collectors.toList());
 		//
 		if (size(ms) > 1) {
@@ -232,12 +232,32 @@ public class KeyStoreCertificateSshUpdater {
 			//
 	}
 
+	private static Class<?>[] getParameterTypes(final Method instance) {
+		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Stream<Field> stream = testAndApply(Objects::nonNull,
+				testAndApply(Objects::nonNull, getClass(instance), Narcissus::getDeclaredFields, null), Arrays::stream,
+				null);
+		//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(stream, f -> Objects.equals(getName(f), "parameterTypes")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return field == null || Narcissus.getField(instance, field) != null ? instance.getParameterTypes() : null;
+		//
+	}
+
 	private static MessageDigest getMessageDigest(final String name) {
 		//
 		final List<Method> ms = collect(
 				filter(testAndApply(Objects::nonNull, MessageDigest.class.getDeclaredMethods(), Arrays::stream, null),
-						m -> Boolean.logicalAnd(Objects.equals(getName(m), "getInstance"), Arrays
-								.equals(m != null ? m.getParameterTypes() : null, new Class<?>[] { String.class }))),
+						m -> Boolean.logicalAnd(Objects.equals(getName(m), "getInstance"),
+								Arrays.equals(getParameterTypes(m), new Class<?>[] { String.class }))),
 				Collectors.toList());
 		//
 		if (size(ms) > 1) {
