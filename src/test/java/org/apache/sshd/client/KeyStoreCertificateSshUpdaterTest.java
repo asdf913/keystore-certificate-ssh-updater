@@ -632,9 +632,7 @@ class KeyStoreCertificateSshUpdaterTest {
 					|| Boolean.logicalAnd(Objects.equals(name = getName(m), "getClass"),
 							Arrays.equals(parameterTypes, new Class<?>[] { Object.class }))
 					|| Boolean.logicalAnd(Objects.equals(name, "filter"),
-							Arrays.equals(parameterTypes, new Class<?>[] { Stream.class, Predicate.class }))
-					|| Boolean.logicalAnd(Objects.equals(name, "newDocumentBuilder"),
-							Arrays.equals(parameterTypes, new Class<?>[] { DocumentBuilderFactory.class }))) {
+							Arrays.equals(parameterTypes, new Class<?>[] { Stream.class, Predicate.class }))) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
