@@ -475,23 +475,25 @@ public class KeyStoreCertificateSshUpdater {
 					//
 					try {
 						//
+						final String dateFormat = "+%Y%m%d_%H%M%S";
+						//
 						if (Objects.equals(
 								StringUtils.trim(executeRemoteCommand(clientSession,
 										"[ -w " + file + " ] && echo \"Writable\" || echo \"Not Writable\"")),
 								"Writable")) {
 							//
 							info(logger, format, StringUtils.rightPad("backup", length),
-									StringUtils.trim(executeRemoteCommand(clientSession, String.join(
-											String.join("", "echo ", file, ".`date -r ", file, " +%Y%m%d_%H%M%S`")))));
+									StringUtils.trim(executeRemoteCommand(clientSession, String.join(String.join("",
+											"echo ", file, ".`date -r ", file, " ", dateFormat, "`")))));
 							//
-							executeRemoteCommand(clientSession,
-									String.join("", "cp -p ", file, " ", file, ".`date -r ", file, " +%Y%m%d_%H%M%S`"));
+							executeRemoteCommand(clientSession, String.join("", "cp -p ", file, " ", file, ".`date -r ",
+									file, " ", dateFormat, "`"));
 							//
 						} else {
 							//
 							try (final ChannelExec channel = createExecChannel(clientSession,
-									String.join("", "sudo cp -p ", file, " ", file, ".`date -r ", file,
-											" +%Y%m%d_%H%M%S`"));
+									String.join("", "sudo cp -p ", file, " ", file, ".`date -r ", file, " ", dateFormat,
+											"`"));
 									final OutputStream out = new ByteArrayOutputStream();
 									final OutputStream err = new ByteArrayOutputStream()) {
 								//
