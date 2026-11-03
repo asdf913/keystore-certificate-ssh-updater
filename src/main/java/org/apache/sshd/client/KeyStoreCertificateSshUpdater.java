@@ -23,8 +23,10 @@ import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -399,133 +401,175 @@ public class KeyStoreCertificateSshUpdater {
 				//
 				final String storepass = getValue(keyStorePathPassword);
 				//
-				if (keyStore != null) {
+				try (final InputStream is2 = testAndApply(
+						x -> x != null && x.getPath() != null && x.exists() && x.isFile() && x.length() > 0, tempFile,
+						FileInputStream::new, null)) {
 					//
-					try (final InputStream is2 = testAndApply(
-							x -> x != null && x.getPath() != null && x.exists() && x.isFile() && x.length() > 0,
-							tempFile, FileInputStream::new, null)) {
+					load(keyStore, is2, toCharArray(storepass));
+					//
+				} // try
+					//
+				final Certificate certificate = getCertfiicate(url);
+				//
+				final byte[] encoded = getEncoded(certificate);
+				//
+				info(logger, "{}={}", StringUtils.rightPad(algorithm, length),
+						toUpperCase(addCharacter(
+								testAndApply(Objects::nonNull, digest(md, encoded), Hex::encodeHexString, null), 2,
+								':')));
+				//
+				if (contains(keyStore, encoded)) {
+					//
+					info(logger, "Certificate is found.");
+					//
+				} else {
+					//
+					try {
 						//
-						keyStore.load(is2, toCharArray(storepass));
+						if (Objects.equals(
+								StringUtils.trim(executeRemoteCommand(clientSession,
+										"[ -w " + file + " ] && echo \"Writable\" || echo \"Not Writable\"")),
+								"Writable")) {
+							//
+							info(logger, "{}={}", StringUtils.rightPad("backup", length),
+									StringUtils.trim(executeRemoteCommand(clientSession, String.join(
+											String.join("", "echo ", file, ".`date -r ", file, " +%Y%m%d_%H%M%S`")))));
+							//
+							executeRemoteCommand(clientSession,
+									String.join("", "cp -p ", file, " ", file, ".`date -r ", file, " +%Y%m%d_%H%M%S`"));
+							//
+						} else {
+							//
+							try (final ChannelExec channel = createExecChannel(clientSession,
+									String.join("", "sudo cp -p ", file, " ", file, ".`date -r ", file,
+											" +%Y%m%d_%H%M%S`"));
+									final OutputStream out = new ByteArrayOutputStream();
+									final OutputStream err = new ByteArrayOutputStream()) {
+								//
+								setOut(channel, out);
+								//
+								setErr(channel, err);
+								//
+								final OpenFuture openFuture = verify(open(channel), Duration.ofSeconds(5));
+								//
+								info(logger, "{}={}", StringUtils.rightPad("opened", length),
+										openFuture != null ? openFuture.isOpened() : null);
+								//
+							} // try
+								//
+						} // if
+							//
+					} catch (final RemoteException e) {
+						//
+						if (logger != null) {
+							//
+							logger.error(e != null ? e.getMessage() : null, e);
+							//
+						} // if
+							//
+					} // try
+						//
+					final X509Certificate x509Certificate = cast(X509Certificate.class, certificate);
+					//
+					final DateFormat df = new SimpleDateFormat("yyyyMMdd");
+					//
+					final String alias = StringUtils.joinWith("_",
+							StringUtils.substringAfter(getName(getSubjectX500Principal(x509Certificate)), '='),
+							format(df, getNotBefore(x509Certificate)), format(df, getNotAfter(x509Certificate)));
+					//
+					info(logger, "{}={}", StringUtils.rightPad("alias", length), alias);
+					//
+					final File filePem = new File(String.join(".", alias, "pem"));
+					//
+					info(logger, "{}={}", StringUtils.rightPad("filePem", length), getAbsolutePath(filePem));
+					//
+					testAndAccept(Objects::nonNull, getEncoded(certificate),
+							x -> writeToPem(x, "CERTIFICATE", filePem));
+					//
+					setCertificateEntry(keyStore, alias, certificate);
+					//
+					try (final InputStream is2 = testAndApply(KeyStoreCertificateSshUpdater::exists, filePem,
+							FileInputStream::new, null)) {
+						//
+						testAndAccept(Objects::nonNull, is2, x -> put(sftpClient, x, "/tmp/" + getName(filePem)));
 						//
 					} // try
 						//
-					final Certificate certificate = getCertfiicate(url);
+					final String keytool = config != null ? config.keytool : null;
 					//
-					final byte[] encoded = getEncoded(certificate);
+					info(logger, "{}={}", StringUtils.rightPad("keytool", length), keytool);
 					//
-					info(logger, "{}={}", StringUtils.rightPad(algorithm, length),
-							toUpperCase(addCharacter(
-									testAndApply(Objects::nonNull, digest(md, encoded), Hex::encodeHexString, null), 2,
-									':')));
+					try (final ChannelExec channel = createExecChannel(clientSession,
+							String.join("", "sudo ", keytool, " -import -keystore ", file, " -storepass ", storepass,
+									" -file ", "/tmp/" + filePem.getName(), " -noprompt -alias ", alias));
+							final OutputStream out = new ByteArrayOutputStream();
+							final OutputStream err = new ByteArrayOutputStream()) {
+						//
+						setOut(channel, out);
+						//
+						setErr(channel, err);
+						//
+						final OpenFuture openFuture = verify(open(channel), Duration.ofSeconds(5));
+						//
+						info(logger, "{}={}", StringUtils.rightPad("opened", length),
+								openFuture != null ? openFuture.isOpened() : null);
+						//
+					} // try
+						//
+					info(logger, "Certificate is added.");
 					//
-					if (contains(keyStore, encoded)) {
-						//
-						info(logger, "Certificate is found.");
-						//
-					} else {
-						//
-						try {
-							//
-							if (Objects.equals(
-									StringUtils.trim(executeRemoteCommand(clientSession,
-											"[ -w " + file + " ] && echo \"Writable\" || echo \"Not Writable\"")),
-									"Writable")) {
-								//
-								info(logger, "{}={}", StringUtils.rightPad("backup", length),
-										StringUtils.trim(executeRemoteCommand(clientSession, String.join(String.join("",
-												"echo ", file, ".`date -r ", file, " +%Y%m%d_%H%M%S`")))));
-								//
-								executeRemoteCommand(clientSession, String.join("", "cp -p ", file, " ", file,
-										".`date -r ", file, " +%Y%m%d_%H%M%S`"));
-								//
-							} else {
-								//
-								try (final ChannelExec channel = createExecChannel(clientSession,
-										String.join("", "sudo cp -p ", file, " ", file, ".`date -r ", file,
-												" +%Y%m%d_%H%M%S`"));
-										final OutputStream out = new ByteArrayOutputStream();
-										final OutputStream err = new ByteArrayOutputStream()) {
-									//
-									setOut(channel, out);
-									//
-									setErr(channel, err);
-									//
-									final OpenFuture openFuture = verify(open(channel), Duration.ofSeconds(5));
-									//
-									info(logger, "{}={}", StringUtils.rightPad("opened", length),
-											openFuture != null ? openFuture.isOpened() : null);
-									//
-								} // try
-									//
-							} // if
-								//
-						} catch (final RemoteException e) {
-							//
-							if (logger != null) {
-								//
-								logger.error(e != null ? e.getMessage() : null, e);
-								//
-							} // if
-								//
-						} // try
-							//
-						final X509Certificate x509Certificate = cast(X509Certificate.class, certificate);
-						//
-						final DateFormat df = new SimpleDateFormat("yyyyMMdd");
-						//
-						final String alias = StringUtils.joinWith("_",
-								StringUtils.substringAfter(getName(getSubjectX500Principal(x509Certificate)), '='),
-								format(df, getNotBefore(x509Certificate)), format(df, getNotAfter(x509Certificate)));
-						//
-						info(logger, "{}={}", StringUtils.rightPad("alias", length), alias);
-						//
-						final File filePem = new File(String.join(".", alias, "pem"));
-						//
-						info(logger, "{}={}", StringUtils.rightPad("filePem", length), getAbsolutePath(filePem));
-						//
-						testAndAccept(Objects::nonNull, getEncoded(certificate),
-								x -> writeToPem(x, "CERTIFICATE", filePem));
-						//
-						keyStore.setCertificateEntry(alias, certificate);
-						//
-						try (final InputStream is2 = testAndApply(KeyStoreCertificateSshUpdater::exists, filePem,
-								FileInputStream::new, null)) {
-							//
-							testAndAccept(Objects::nonNull, is2, x -> put(sftpClient, x, "/tmp/" + getName(filePem)));
-							//
-						} // try
-							//
-						final String keytool = config != null ? config.keytool : null;
-						//
-						info(logger, "{}={}", StringUtils.rightPad("keytool", length), keytool);
-						//
-						try (final ChannelExec channel = createExecChannel(clientSession,
-								String.join("", "sudo ", keytool, " -import -keystore ", file, " -storepass ",
-										storepass, " -file ", "/tmp/" + filePem.getName(), " -noprompt -alias ",
-										alias));
-								final OutputStream out = new ByteArrayOutputStream();
-								final OutputStream err = new ByteArrayOutputStream()) {
-							//
-							setOut(channel, out);
-							//
-							setErr(channel, err);
-							//
-							final OpenFuture openFuture = verify(open(channel), Duration.ofSeconds(5));
-							//
-							info(logger, "{}={}", StringUtils.rightPad("opened", length),
-									openFuture != null ? openFuture.isOpened() : null);
-							//
-						} // try
-							//
-						info(logger, "Certificate is added.");
-						//
-					} // if
-						//
 				} // if
 					//
 			} // try
 				//
 		} // try
+			//
+	}
+
+	private static void setCertificateEntry(final KeyStore instance, final String alias, final Certificate cert)
+			throws KeyStoreException {
+		//
+		if (instance == null) {
+			//
+			return;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "initialized")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		if (field == null
+				|| (Objects.equals(field.getType(), Boolean.TYPE) && Narcissus.getBooleanField(instance, field))) {
+			//
+			instance.setCertificateEntry(alias, cert);
+			//
+		} // if
+			//
+	}
+
+	private static void load(final KeyStore instance, final InputStream stream, final char[] password)
+			throws IOException, NoSuchAlgorithmException, CertificateException {
+		//
+		if (instance == null) {
+			//
+			return;
+			//
+		} // if
+			//
+		final Field field = testAndApply(y -> size(y) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "keyStoreSpi")), Collectors.toList()),
+				y -> get(y, 0), null);
+		//
+		if (field == null || Narcissus.getField(instance, field) != null) {
+			//
+			instance.load(stream, password);
+			//
+		} // if
 			//
 	}
 
