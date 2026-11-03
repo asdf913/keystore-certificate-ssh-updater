@@ -461,8 +461,12 @@ public class KeyStoreCertificateSshUpdater {
 								//
 						} catch (final RemoteException e) {
 							//
-							e.printStackTrace();
-							//
+							if (logger != null) {
+								//
+								logger.error(e != null ? e.getMessage() : null, e);
+								//
+							} // if
+								//
 						} // try
 							//
 						final X509Certificate x509Certificate = cast(X509Certificate.class, certificate);
