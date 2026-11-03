@@ -461,12 +461,8 @@ public class KeyStoreCertificateSshUpdater {
 							//
 					} catch (final RemoteException e) {
 						//
-						if (logger != null) {
-							//
-							logger.error(getMessage(e), e);
-							//
-						} // if
-							//
+						error(logger, getMessage(e), e);
+						//
 					} // try
 						//
 					final X509Certificate x509Certificate = cast(X509Certificate.class, certificate);
@@ -575,6 +571,12 @@ public class KeyStoreCertificateSshUpdater {
 			//
 		} // if
 			//
+	}
+
+	private static void error(final Logger instance, final String msg, final Throwable t) {
+		if (instance != null) {
+			instance.error(msg, t);
+		}
 	}
 
 	private static void info(final Logger instance, final String format, final Object... arguments) {
