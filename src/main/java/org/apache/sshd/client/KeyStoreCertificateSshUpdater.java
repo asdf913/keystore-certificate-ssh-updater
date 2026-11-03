@@ -425,7 +425,8 @@ public class KeyStoreCertificateSshUpdater {
 					? createSftpClient(SftpClientFactory.instance(), clientSession)
 					: null; final InputStream is = read(sftpClient, file)) {
 				//
-				if (Boolean.logicalAnd(is != null, exists(tempFile) && canWrite(tempFile))) {
+				if (Boolean.logicalAnd(is != null, and(tempFile, KeyStoreCertificateSshUpdater::exists,
+						KeyStoreCertificateSshUpdater::canWrite))) {
 					//
 					FileUtils.writeByteArrayToFile(tempFile, IOUtils.toByteArray(is));
 					//
