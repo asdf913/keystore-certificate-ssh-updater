@@ -405,7 +405,7 @@ public class KeyStoreCertificateSshUpdater {
 					? createSftpClient(SftpClientFactory.instance(), clientSession)
 					: null; final InputStream is = read(sftpClient, file)) {
 				//
-				if (is != null && tempFile != null && tempFile.exists() && tempFile.canWrite()) {
+				if (Boolean.logicalAnd(is != null, exists(tempFile) && canWrite(tempFile))) {
 					//
 					FileUtils.writeByteArrayToFile(tempFile, IOUtils.toByteArray(is));
 					//
@@ -727,6 +727,10 @@ public class KeyStoreCertificateSshUpdater {
 			final Path path, final FilePasswordProvider passwordProvider, final OpenOption... options)
 			throws IOException, GeneralSecurityException {
 		return instance != null ? instance.loadKeyPairs(session, path, passwordProvider, options) : null;
+	}
+
+	private static boolean canWrite(final File instance) {
+		return instance != null && instance.getPath() != null && instance.canWrite();
 	}
 
 	private static boolean exists(final File instance) {
