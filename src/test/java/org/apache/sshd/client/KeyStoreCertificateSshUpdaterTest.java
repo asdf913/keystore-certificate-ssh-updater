@@ -175,11 +175,7 @@ class KeyStoreCertificateSshUpdaterTest {
 					//
 			} else if (proxy instanceof Entry) {
 				//
-				if (Objects.equals(name, "getValue")) {
-					//
-					return null;
-					//
-				} else if (Objects.equals(name, "getKey")) {
+				if (contains(Arrays.asList("getValue", "getKey"), name)) {
 					//
 					return null;
 					//
@@ -243,15 +239,7 @@ class KeyStoreCertificateSshUpdaterTest {
 					//
 			} else if (proxy instanceof ClientSession) {
 				//
-				if (Objects.equals(name, "auth")) {
-					//
-					return null;
-					//
-				} else if (Objects.equals(name, "executeRemoteCommand")) {
-					//
-					return null;
-					//
-				} else if (Objects.equals(name, "createExecChannel")) {
+				if (contains(Arrays.asList("auth", "executeRemoteCommand", "createExecChannel"), name)) {
 					//
 					return null;
 					//
