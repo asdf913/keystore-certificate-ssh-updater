@@ -151,6 +151,8 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 
 	private static final String KEYTOOL = "keytool";
 
+	private static final String SHA1 = "SHA-1";
+
 	@Target(ElementType.FIELD)
 	@Retention(RetentionPolicy.RUNTIME)
 	private @interface Note {
@@ -317,7 +319,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 								getNodeValue(getNamedItem(attributes, PASSWORD)));
 						//
 						perform(sshClient, config, tempFile, url,
-								md = ObjectUtils.getIfNull(md, () -> getMessageDigest("SHA-1")), LOG);
+								md = ObjectUtils.getIfNull(md, () -> getMessageDigest(SHA1)), LOG);
 						//
 					} // for
 						//
@@ -338,7 +340,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 				config.keyStorePathPassword = Pair.of(get(map, "keystore"), get(map, "storepass"));
 				//
-				perform(sshClient, config, tempFile, get(map, "url"), getMessageDigest("SHA-1"), LOG);
+				perform(sshClient, config, tempFile, get(map, "url"), getMessageDigest(SHA1), LOG);
 				//
 			} // if
 				//
@@ -421,7 +423,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 				config.keyStorePathPassword = Pair.of(getText(tfKeyStorePath), getText(tfKeyStorePassword));
 				//
-				perform(sshClient, config, tempFile, getText(tfUrl), getMessageDigest("SHA-1"), LOG);
+				perform(sshClient, config, tempFile, getText(tfUrl), getMessageDigest(SHA1), LOG);
 				//
 			} catch (final Exception e) {
 				//
