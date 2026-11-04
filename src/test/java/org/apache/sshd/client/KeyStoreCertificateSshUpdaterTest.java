@@ -1,5 +1,6 @@
 package org.apache.sshd.client;
 
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -624,7 +625,8 @@ class KeyStoreCertificateSshUpdaterTest {
 					//
 					add(collection, Narcissus.allocateInstance(getClass(Duration.ofSeconds(0))));
 					//
-				} else if (Objects.equals(parameterType, JTextComponent.class)) {
+				} else if (Objects.equals(parameterType, JTextComponent.class)
+						|| Objects.equals(parameterType, Component.class)) {
 					//
 					add(collection, Narcissus.allocateInstance(JTextField.class));
 					//

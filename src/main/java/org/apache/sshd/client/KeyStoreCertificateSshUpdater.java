@@ -1,5 +1,7 @@
 package org.apache.sshd.client;
 
+import java.awt.Component;
+import java.awt.Container;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -181,77 +183,72 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 		//
 		if (Boolean.logicalOr(isGui(), Objects.equals(get(map, "gui"), "true"))) {
 			//
+			final KeyStoreCertificateSshUpdater instance = new KeyStoreCertificateSshUpdater();
+			//
+			instance.setLayout(new MigLayout());
+			//
+			instance.add(new JLabel("Host"));
+			//
+			final String wrap = "wrap";
+			//
+			instance.add(instance.tfHost = new JTextField(), String.format("wmin %1$s,%2$s", 200, wrap));
+			//
+			instance.add(new JLabel("Port"));
+			//
+			final String growx = "growx";
+			//
+			instance.add(instance.tfPort = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
+			//
+			instance.add(new JLabel("User"));
+			//
+			instance.add(instance.tfUsername = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
+			//
+			instance.add(new JLabel("Password"));
+			//
+			instance.add(instance.tfPassword = new JPasswordField(), String.format("%1$s,%2$s", growx, wrap));
+			//
+			instance.add(new JLabel("Public Key"));
+			//
+			instance.add(instance.tfPublicKey = new JPasswordField(), growx);
+			//
+			instance.tfPublicKey.setEditable(false);
+			//
+			instance.add(instance.btnPublicKey = new JButton("Select"), wrap);
+			//
+			instance.btnPublicKey.addActionListener(instance);
+			//
+			instance.add(new JLabel("Key Tool"));
+			//
+			instance.add(instance.tfKeyTool = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
+			//
+			instance.add(new JLabel("Key Store Path"));
+			//
+			instance.add(instance.tfKeyStorePath = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
+			//
+			instance.add(new JLabel("Key Store Password"));
+			//
+			instance.add(instance.tfKeyStorePassword = new JPasswordField(), String.format("%1$s,%2$s", growx, wrap));
+			//
+			instance.add(new JLabel("URL"));
+			//
+			instance.add(instance.tfUrl = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
+			//
+			instance.add(new JLabel());
+			//
+			instance.add(instance.btnExecute = new JButton("Execute"), wrap);
+			//
+			instance.btnExecute.addActionListener(instance);
+			//
 			final JFrame jFrame = getAsBooleanAndGet(() -> !GraphicsEnvironment.isHeadless(), JFrame::new);
 			//
-			if (jFrame != null) {
-				//
-				jFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-				//
-				final KeyStoreCertificateSshUpdater instance = new KeyStoreCertificateSshUpdater();
-				//
-				instance.setLayout(new MigLayout());
-				//
-				instance.add(new JLabel("Host"));
-				//
-				final String wrap = "wrap";
-				//
-				instance.add(instance.tfHost = new JTextField(), String.format("wmin %1$s,%2$s", 200, wrap));
-				//
-				instance.add(new JLabel("Port"));
-				//
-				final String growx = "growx";
-				//
-				instance.add(instance.tfPort = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
-				//
-				instance.add(new JLabel("User"));
-				//
-				instance.add(instance.tfUsername = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
-				//
-				instance.add(new JLabel("Password"));
-				//
-				instance.add(instance.tfPassword = new JPasswordField(), String.format("%1$s,%2$s", growx, wrap));
-				//
-				instance.add(new JLabel("Public Key"));
-				//
-				instance.add(instance.tfPublicKey = new JPasswordField(), growx);
-				//
-				instance.tfPublicKey.setEditable(false);
-				//
-				instance.add(instance.btnPublicKey = new JButton("Select"), wrap);
-				//
-				instance.btnPublicKey.addActionListener(instance);
-				//
-				instance.add(new JLabel("Key Tool"));
-				//
-				instance.add(instance.tfKeyTool = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
-				//
-				instance.add(new JLabel("Key Store Path"));
-				//
-				instance.add(instance.tfKeyStorePath = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
-				//
-				instance.add(new JLabel("Key Store Password"));
-				//
-				instance.add(instance.tfKeyStorePassword = new JPasswordField(),
-						String.format("%1$s,%2$s", growx, wrap));
-				//
-				instance.add(new JLabel("URL"));
-				//
-				instance.add(instance.tfUrl = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
-				//
-				instance.add(new JLabel());
-				//
-				instance.add(instance.btnExecute = new JButton("Execute"), wrap);
-				//
-				instance.btnExecute.addActionListener(instance);
-				//
-				jFrame.add(instance);
-				//
-				jFrame.pack();
-				//
-				jFrame.setVisible(true);
-				//
-			} // if
-				//
+			setDefaultCloseOperation(jFrame, WindowConstants.EXIT_ON_CLOSE);
+			//
+			add(jFrame, instance);
+			//
+			pack(jFrame);
+			//
+			setVisible(jFrame, true);
+			//
 			return;
 			//
 		} // if
@@ -347,6 +344,61 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 		} // try
 			//
+	}
+
+	private static void setVisible(final Component instnace, final boolean visible) {
+		if (instnace != null) {
+			instnace.setVisible(visible);
+		}
+	}
+
+	private static void pack(final JFrame instance) {
+		//
+		if (instance == null || GraphicsEnvironment.isHeadless()) {
+			//
+			return;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(FieldUtils.getAllFieldsList(getClass(instance)).stream(),
+						f -> Objects.equals(getName(f), "objectLock")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		if (field == null || Narcissus.getField(instance, field) != null) {
+			//
+			instance.pack();
+			//
+		} // if
+			//
+	}
+
+	private static void add(final Container instance, final Component comp) {
+		//
+		if (instance == null) {
+			//
+			return;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						x -> Objects.equals(getName(x), "component")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		if (field == null || Narcissus.getField(instance, field) != null) {
+			//
+			instance.add(comp);
+			//
+		} // if
+			//
+	}
+
+	private static void setDefaultCloseOperation(final JFrame instance, final int operation) {
+		if (instance != null) {
+			instance.setDefaultCloseOperation(operation);
+		}
 	}
 
 	private static <T> T getAsBooleanAndGet(final BooleanSupplier booleanSupplier, final Supplier<T> supplier) {
