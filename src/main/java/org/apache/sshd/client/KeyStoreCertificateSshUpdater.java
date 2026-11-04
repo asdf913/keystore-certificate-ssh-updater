@@ -57,6 +57,8 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.MatchResult;
@@ -215,8 +217,6 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			instance.add(instance.btnPublicKey = new JButton("Select"), wrap);
 			//
-			instance.btnPublicKey.addActionListener(instance);
-			//
 			instance.add(new JLabel("Key Tool"));
 			//
 			instance.add(instance.tfKeyTool = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
@@ -237,7 +237,13 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			instance.add(instance.btnExecute = new JButton("Execute"), wrap);
 			//
-			instance.btnExecute.addActionListener(instance);
+			final Stream<Field> stream = testAndApply(Objects::nonNull,
+					KeyStoreCertificateSshUpdater.class.getDeclaredFields(), Arrays::stream, null);
+			//
+			forEach(map(filter(stream, f -> f != null && AbstractButton.class.isAssignableFrom(f.getType())),
+					f -> cast(AbstractButton.class,
+							isStatic(f) ? Narcissus.getStaticField(f) : Narcissus.getField(instance, f))),
+					x -> addActionListener(x, instance));
 			//
 			final JFrame jFrame = getAsBooleanAndGet(() -> !GraphicsEnvironment.isHeadless(), JFrame::new);
 			//
@@ -343,6 +349,37 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			} // if
 				//
 		} // try
+			//
+	}
+
+	private static <T> void forEach(final Stream<T> instance, final Consumer<? super T> action) {
+		if (instance != null) {
+			instance.forEach(action);
+		}
+	}
+
+	private static <T, R> Stream<R> map(final Stream<T> instance, final Function<? super T, ? extends R> mapper) {
+		return instance != null ? instance.map(mapper) : null;
+	}
+
+	private static void addActionListener(final AbstractButton instance, final ActionListener actionListener) {
+		//
+		if (instance == null) {
+			//
+			return;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(FieldUtils.getAllFieldsList(getClass(instance)).stream(),
+						f -> Objects.equals(getName(f), "objectLock")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		if (field == null || Narcissus.getField(instance, field) != null) {
+			//
+			instance.addActionListener(actionListener);
+			//
+		} // if
 			//
 	}
 

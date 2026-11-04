@@ -35,6 +35,7 @@ import java.util.regex.MatchResult;
 import java.util.stream.Stream;
 
 import javax.net.ssl.HttpsURLConnection;
+import javax.swing.AbstractButton;
 import javax.swing.JButton;
 import javax.swing.JTextField;
 import javax.swing.text.JTextComponent;
@@ -231,6 +232,10 @@ class KeyStoreCertificateSshUpdaterTest {
 			} else if (proxy instanceof Stream) {
 				//
 				if (Objects.equals(name, "collect")) {
+					//
+					return null;
+					//
+				} else if (Objects.equals(name, "map")) {
 					//
 					return null;
 					//
@@ -629,6 +634,10 @@ class KeyStoreCertificateSshUpdaterTest {
 						|| Objects.equals(parameterType, Component.class)) {
 					//
 					add(collection, Narcissus.allocateInstance(JTextField.class));
+					//
+				} else if (Objects.equals(parameterType, AbstractButton.class)) {
+					//
+					add(collection, Narcissus.allocateInstance(JButton.class));
 					//
 				} else if (parameterType != null && parameterType.isInterface()) {
 					//
