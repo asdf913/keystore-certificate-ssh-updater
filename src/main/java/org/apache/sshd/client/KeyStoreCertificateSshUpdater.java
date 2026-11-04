@@ -1,5 +1,8 @@
 package org.apache.sshd.client;
 
+import java.awt.GraphicsEnvironment;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -8,6 +11,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -15,6 +20,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.FileSystems;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.rmi.RemoteException;
@@ -44,6 +50,9 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -51,6 +60,16 @@ import java.util.stream.Stream;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.security.auth.x500.X500Principal;
+import javax.swing.AbstractButton;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+import javax.swing.WindowConstants;
+import javax.swing.text.JTextComponent;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -64,6 +83,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -106,10 +126,14 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import com.google.common.net.HostAndPort;
+import com.sun.jna.platform.win32.Kernel32Util;
 
 import io.github.toolfactory.narcissus.Narcissus;
+import net.miginfocom.swing.MigLayout;
 
-public class KeyStoreCertificateSshUpdater {
+public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListener {
+
+	private static final long serialVersionUID = -7414566256715350073L;
 
 	private static final Logger LOG = LoggerFactory.getLogger(KeyStoreCertificateSshUpdater.class);
 
@@ -121,32 +145,99 @@ public class KeyStoreCertificateSshUpdater {
 
 	private static final String KEYTOOL = "keytool";
 
+	private JTextComponent tfHost, tfPort, tfUsername, tfPassword, tfPublicKey, tfKeyTool, tfKeyStorePath,
+			tfKeyStorePassword, tfUrl = null;
+
+	private AbstractButton btnPublicKey, btnExecute = null;
+
 	public static void main(final String[] args) throws Exception {
 		//
-		final List<Method> ms = collect(
-				filter(testAndApply(Objects::nonNull, File.class.getDeclaredMethods(), Arrays::stream, null),
-						m -> Boolean.logicalAnd(Objects.equals(getName(m), "createTempFile"),
-								Arrays.equals(getParameterTypes(m), new Class<?>[] { String.class, String.class }))),
-				Collectors.toList());
-		//
-		if (size(ms) > 1) {
-			//
-			throw new RuntimeException();
-			//
-		} // if
-			//
-		final File tempFile = cast(File.class,
-				testAndApply(x -> isStatic(x), testAndApply(x -> size(x) == 1, ms, x -> get(x, 0), null),
-						x -> Narcissus.invokeStaticMethod(x, nextAlphabetic(RandomStringUtils.secure(), 3), null),
-						null));
+		final File tempFile = createTempFile(nextAlphabetic(RandomStringUtils.secure(), 3), null);
 		//
 		deleteOnExit(tempFile);
 		//
+		final Map<String, String> map = toMap(args);
+		//
+		if (isGui() || Objects.equals(get(map, "gui"), "true")) {
+			//
+			final JFrame jFrame = !GraphicsEnvironment.isHeadless() ? new JFrame() : null;
+			//
+			if (jFrame != null) {
+				//
+				jFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+				//
+				final KeyStoreCertificateSshUpdater instance = new KeyStoreCertificateSshUpdater();
+				//
+				instance.setLayout(new MigLayout());
+				//
+				instance.add(new JLabel("Host"));
+				//
+				final String wrap = "wrap";
+				//
+				instance.add(instance.tfHost = new JTextField(), String.format("wmin %1$s,%2$s", 200, wrap));
+				//
+				instance.add(new JLabel("Port"));
+				//
+				final String growx = "growx";
+				//
+				instance.add(instance.tfPort = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
+				//
+				instance.add(new JLabel("User"));
+				//
+				instance.add(instance.tfUsername = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
+				//
+				instance.add(new JLabel("Password"));
+				//
+				instance.add(instance.tfPassword = new JPasswordField(), String.format("%1$s,%2$s", growx, wrap));
+				//
+				instance.add(new JLabel("Public Key"));
+				//
+				instance.add(instance.tfPublicKey = new JPasswordField(), growx);
+				//
+				instance.tfPublicKey.setEditable(false);
+				//
+				instance.add(instance.btnPublicKey = new JButton("Select"), wrap);
+				//
+				instance.btnPublicKey.addActionListener(instance);
+				//
+				instance.add(new JLabel("Key Tool"));
+				//
+				instance.add(instance.tfKeyTool = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
+				//
+				instance.add(new JLabel("Key Store Path"));
+				//
+				instance.add(instance.tfKeyStorePath = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
+				//
+				instance.add(new JLabel("Key Store Password"));
+				//
+				instance.add(instance.tfKeyStorePassword = new JPasswordField(),
+						String.format("%1$s,%2$s", growx, wrap));
+				//
+				instance.add(new JLabel("URL"));
+				//
+				instance.add(instance.tfUrl = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
+				//
+				instance.add(new JLabel());
+				//
+				instance.add(instance.btnExecute = new JButton("Execute"), wrap);
+				//
+				instance.btnExecute.addActionListener(instance);
+				//
+				jFrame.add(instance);
+				//
+				jFrame.pack();
+				//
+				jFrame.setVisible(true);
+				//
+			} // if
+				//
+			return;
+			//
+		} // if
+			//
 		try (final SshClient sshClient = SshClient.setUpDefaultClient()) {
 			//
 			start(sshClient);
-			//
-			final Map<String, String> map = toMap(args);
 			//
 			if (containsKey(map, "config")) {
 				//
@@ -235,6 +326,249 @@ public class KeyStoreCertificateSshUpdater {
 				//
 		} // try
 			//
+	}
+
+	private static File createTempFile(final String prefix, final String suffix) {
+		//
+		final List<Method> ms = collect(
+				filter(testAndApply(Objects::nonNull, File.class.getDeclaredMethods(), Arrays::stream, null),
+						m -> Boolean.logicalAnd(Objects.equals(getName(m), "createTempFile"),
+								Arrays.equals(getParameterTypes(m), new Class<?>[] { String.class, String.class }))),
+				Collectors.toList());
+		//
+		if (size(ms) > 1) {
+			//
+			throw new RuntimeException();
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(prefix), FieldUtils::getAllFieldsList, null)),
+						x -> Objects.equals(getName(x), VALUE)), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return cast(File.class, testAndApply(
+				x -> isStatic(x) && prefix != null && (field == null || Narcissus.getField(prefix, field) != null),
+				testAndApply(x -> size(x) == 1, ms, x -> get(x, 0), null),
+				x -> Narcissus.invokeStaticMethod(x, prefix, suffix), null));
+		//
+	}
+
+	@Override
+	public void actionPerformed(final ActionEvent evt) {
+		//
+		final Object source = evt != null ? evt.getSource() : null;
+		//
+		if (Objects.equals(source, btnPublicKey)) {
+			//
+			final JFileChooser jfc = new JFileChooser();
+			//
+			if (!GraphicsEnvironment.isHeadless() && !isTestMode()
+					&& jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+				//
+				final File file = jfc.getSelectedFile();
+				//
+				if (tfPublicKey != null) {
+					//
+					tfPublicKey.setText(exists(file) && isFile(file) ? getAbsolutePath(file) : null);
+					//
+				} // if
+					//
+			} // if
+				//
+		} else if (Objects.equals(source, btnExecute)) {
+			//
+			final File tempFile = createTempFile(nextAlphabetic(RandomStringUtils.secure(), 3), null);
+			//
+			try (final SshClient sshClient = SshClient.setUpDefaultClient()) {
+				//
+				start(sshClient);
+				//
+				final Config config = new Config();
+				//
+				config.hostAndPort = testAndApply(Objects::nonNull, getText(tfHost),
+						x -> HostAndPort.fromParts(x, NumberUtils.toInt(getText(tfPort), SshConstants.DEFAULT_PORT)),
+						null);
+				//
+				config.basicCredentialsProvider = new BasicCredentialsImpl(getText(tfUsername), getText(tfPassword));
+				//
+				config.publicKey = testAndApply(Objects::nonNull, getText(tfPublicKey), File::new, null);
+				//
+				config.keytool = getText(tfKeyTool);
+				//
+				config.keyStorePathPassword = Pair.of(getText(tfKeyStorePath), getText(tfKeyStorePassword));
+				//
+				perform(sshClient, config, tempFile, getText(tfUrl), getMessageDigest("SHA-1"), LOG);
+				//
+			} catch (final Exception e) {
+				//
+				error(LOG, getMessage(e), e);
+				//
+			} finally {
+				//
+				FileUtils.deleteQuietly(tempFile);
+				//
+			} // try
+				//
+		} // if
+			//
+	}
+
+	private static boolean isTestMode() {
+		try {
+			return Class.forName("org.testng.annotations.Test") != null;
+		} catch (final ClassNotFoundException e) {
+			return false;
+		}
+	}
+
+	private static String getText(final JTextComponent instance) {
+		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		try {
+			//
+			if (Narcissus.getField(instance, Narcissus.findField(getClass(instance), "model")) == null) {
+				//
+				return null;
+				//
+			} // if
+				//
+		} catch (final NoSuchFieldException e) {
+			//
+			throw new RuntimeException(e);
+			//
+		} // try
+			//
+		return instance.getText();
+		//
+	}
+
+	private static boolean isGui() {
+		//
+		final String name = getName(getClass(FileSystems.getDefault()));
+		//
+		if (Objects.equals(name, "sun.nio.fs.MacOSXFileSystem")) {
+			//
+			return System.console() == null;
+			//
+		} // if
+			//
+		if (Objects.equals(name, "sun.nio.fs.WindowsFileSystem")) {
+			//
+			final Matcher matcher = matcher(Pattern.compile("\\d+"), getName(ManagementFactory.getRuntimeMXBean()));
+			//
+			if (find(matcher)) {
+				//
+				return BooleanUtils.toBooleanDefaultIfNull(testAndApply(NumberUtils::isDigits, group(matcher),
+						x -> endsWith(Kernel32Util.QueryFullProcessImageName(NumberUtils.toInt(x), 0), "javaw.exe"),
+						null), false);
+				//
+			} // if
+				//
+		} // if
+			//
+		return false;
+		//
+	}
+
+	private static boolean endsWith(final String instance, final String suffix) {
+		//
+		if (instance == null || suffix == null) {
+			//
+			return false;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						x -> Objects.equals(getName(x), VALUE)), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return (field == null || Boolean.logicalAnd(Narcissus.getField(instance, field) != null,
+				Narcissus.getField(suffix, field) != null)) && instance.endsWith(suffix);
+		//
+	}
+
+	private static Matcher matcher(final Pattern instance, final CharSequence input) {
+		//
+		if (instance == null || input == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field normalizedPattern = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "normalizedPattern")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		final Field value = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(input), FieldUtils::getAllFieldsList, null)),
+						x -> Objects.equals(getName(x), VALUE)), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return (normalizedPattern == null || Narcissus.getField(instance, normalizedPattern) != null)
+				&& (value == null || Narcissus.getField(input, value) != null) ? instance.matcher(input) : null;
+		//
+	}
+
+	private static String group(final MatchResult instance) {
+		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field first = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "first")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		if (first != null && Objects.equals(first.getType(), Integer.TYPE)) {
+			//
+			return Narcissus.getIntField(instance, first) >= 0 ? instance.group() : null;
+			//
+		} // if
+			//
+		return instance.group();
+		//
+	}
+
+	private static String getName(final RuntimeMXBean instance) {
+		return instance != null ? instance.getName() : null;
+	}
+
+	private static boolean find(final Matcher instance) {
+		//
+		if (instance == null) {
+			//
+			return false;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "groups")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return (field == null || Narcissus.getField(instance, field) != null) && instance.find();
+		//
+	}
+
+	private static String getName(final Class<?> instance) {
+		return instance != null ? instance.getName() : null;
 	}
 
 	private static boolean isStatic(final Member instance) {

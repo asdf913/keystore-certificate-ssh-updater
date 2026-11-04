@@ -1,9 +1,11 @@
 package org.apache.sshd.client;
 
+import java.awt.event.ActionEvent;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
@@ -26,9 +28,13 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
+import java.util.regex.MatchResult;
 import java.util.stream.Stream;
 
 import javax.net.ssl.HttpsURLConnection;
+import javax.swing.JButton;
+import javax.swing.JTextField;
+import javax.swing.text.JTextComponent;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
@@ -54,6 +60,7 @@ import org.apache.sshd.sftp.client.SftpClient;
 import org.apache.sshd.sftp.client.SftpClientFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -66,7 +73,7 @@ import io.github.toolfactory.narcissus.Narcissus;
 class KeyStoreCertificateSshUpdaterTest {
 
 	private static Method METHOD_ADD, METHOD_GET_NAME, METHOD_GET_CLASS, METHOD_NEW_DOCUMENT_BUILDER,
-			METHOD_ADD_CHARACTER = null;
+			METHOD_ADD_CHARACTER, METHOD_IS_STATIC, METHOD_CAST = null;
 
 	@BeforeClass
 	static void beforeClass() throws NoSuchMethodException {
@@ -84,6 +91,10 @@ class KeyStoreCertificateSshUpdaterTest {
 		//
 		(METHOD_ADD_CHARACTER = clz.getDeclaredMethod("addCharacter", String.class, Integer.TYPE, Character.TYPE))
 				.setAccessible(true);
+		//
+		(METHOD_IS_STATIC = clz.getDeclaredMethod("isStatic", Member.class)).setAccessible(true);
+		//
+		(METHOD_CAST = clz.getDeclaredMethod("cast", Class.class, Object.class)).setAccessible(true);
 		//
 	}
 
@@ -346,6 +357,14 @@ class KeyStoreCertificateSshUpdaterTest {
 				//
 				return null;
 				//
+			} else if (proxy instanceof RuntimeMXBean && Objects.equals(name, "getName")) {
+				//
+				return null;
+				//
+			} else if (proxy instanceof MatchResult && Objects.equals(name, "group")) {
+				//
+				return null;
+				//
 			} // if
 				//
 			throw new Throwable(name);
@@ -381,6 +400,24 @@ class KeyStoreCertificateSshUpdaterTest {
 				return (Class<?>) obj;
 			}
 			throw new Throwable(Objects.toString(getClass(obj)));
+		} catch (final InvocationTargetException e) {
+			throw e.getTargetException();
+		}
+	}
+
+	private KeyStoreCertificateSshUpdater instance = null;
+
+	@BeforeMethod
+	void beforeMethod() throws Throwable {
+		//
+		instance = cast(KeyStoreCertificateSshUpdater.class,
+				Narcissus.allocateInstance(KeyStoreCertificateSshUpdater.class));
+		//
+	}
+
+	private static <T> T cast(final Class<T> clz, final Object instance) throws Throwable {
+		try {
+			return (T) METHOD_CAST.invoke(null, clz, instance);
 		} catch (final InvocationTargetException e) {
 			throw e.getTargetException();
 		}
@@ -442,7 +479,7 @@ class KeyStoreCertificateSshUpdaterTest {
 			//
 			toString = Objects.toString(m);
 			//
-			result = Narcissus.invokeStaticMethod(m, os);
+			result = isStatic(m) ? Narcissus.invokeStaticMethod(m, os) : Narcissus.invokeMethod(instance, m, os);
 			//
 			if (contains(Arrays.asList(Integer.TYPE, Boolean.TYPE), getReturnType(m))) {
 				//
@@ -573,6 +610,10 @@ class KeyStoreCertificateSshUpdaterTest {
 					//
 					add(collection, Narcissus.allocateInstance(getClass(Duration.ofSeconds(0))));
 					//
+				} else if (Objects.equals(parameterType, JTextComponent.class)) {
+					//
+					add(collection, Narcissus.allocateInstance(JTextField.class));
+					//
 				} else if (parameterType != null && parameterType.isInterface()) {
 					//
 					if ((ih = ObjectUtils.getIfNull(ih, IH::new)) != null) {
@@ -623,7 +664,7 @@ class KeyStoreCertificateSshUpdaterTest {
 			//
 			toString = Objects.toString(m);
 			//
-			result = Narcissus.invokeStaticMethod(m, os);
+			result = isStatic(m) ? Narcissus.invokeStaticMethod(m, os) : Narcissus.invokeMethod(instance, m, os);
 			//
 			if (contains(Arrays.asList(Integer.TYPE, Boolean.TYPE), getReturnType(m))
 					|| Boolean.logicalAnd(Objects.equals(name = getName(m), "getClass"),
@@ -631,7 +672,9 @@ class KeyStoreCertificateSshUpdaterTest {
 					|| Boolean.logicalAnd(Objects.equals(name, "filter"),
 							Arrays.equals(parameterTypes, new Class<?>[] { Stream.class, Predicate.class }))
 					|| Boolean.logicalAnd(Objects.equals(name, "isOpened"),
-							Arrays.equals(parameterTypes, new Class<?>[] { OpenFuture.class }))) {
+							Arrays.equals(parameterTypes, new Class<?>[] { OpenFuture.class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "getName"),
+							Arrays.equals(parameterTypes, new Class<?>[] { Class.class }))) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
@@ -643,6 +686,18 @@ class KeyStoreCertificateSshUpdaterTest {
 				//
 		} // for
 			//
+	}
+
+	private static boolean isStatic(final Member instance) throws Throwable {
+		try {
+			final Object obj = METHOD_IS_STATIC.invoke(null, instance);
+			if (obj instanceof Boolean) {
+				return ((Boolean) obj).booleanValue();
+			}
+			throw new Throwable(Objects.toString(getClass(obj)));
+		} catch (final InvocationTargetException e) {
+			throw e.getTargetException();
+		}
 	}
 
 	private static DocumentBuilder newDocumentBuilder(final DocumentBuilderFactory instance) throws Throwable {
@@ -678,6 +733,23 @@ class KeyStoreCertificateSshUpdaterTest {
 		} catch (final InvocationTargetException e) {
 			throw e.getTargetException();
 		}
+	}
+
+	@Test
+	public void testActionPerformed() throws IllegalAccessException {
+		//
+		if (instance == null) {
+			//
+			return;
+			//
+		} // if
+			//
+		final Object btnExecute = new JButton();
+		//
+		FieldUtils.writeDeclaredField(instance, "btnExecute", btnExecute, true);
+		//
+		instance.actionPerformed(new ActionEvent(btnExecute, 0, null));
+		//
 	}
 
 }
