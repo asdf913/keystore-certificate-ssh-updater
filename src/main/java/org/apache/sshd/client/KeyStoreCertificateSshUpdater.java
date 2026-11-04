@@ -11,6 +11,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Field;
@@ -147,10 +151,22 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 
 	private static final String KEYTOOL = "keytool";
 
-	private JTextComponent tfHost, tfPort, tfUsername, tfPassword, tfPublicKey, tfKeyTool, tfKeyStorePath,
-			tfKeyStorePassword, tfUrl = null;
+	@Target(ElementType.FIELD)
+	@Retention(RetentionPolicy.RUNTIME)
+	private @interface Note {
+		String value();
+	}
 
-	private AbstractButton btnPublicKey, btnExecute = null;
+	@Note("Host")
+	private JTextComponent tfHost = null;
+
+	private JTextComponent tfPort, tfUsername, tfPassword, tfPublicKey, tfKeyTool, tfKeyStorePath, tfKeyStorePassword,
+			tfUrl = null;
+
+	@Note("Public Key")
+	private AbstractButton btnPublicKey = null;
+
+	private AbstractButton btnExecute = null;
 
 	public static void main(final String[] args) throws Exception {
 		//
