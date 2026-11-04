@@ -240,7 +240,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			final Stream<Field> stream = testAndApply(Objects::nonNull,
 					KeyStoreCertificateSshUpdater.class.getDeclaredFields(), Arrays::stream, null);
 			//
-			forEach(map(filter(stream, f -> f != null && AbstractButton.class.isAssignableFrom(f.getType())),
+			forEach(map(filter(stream, f -> isAssignableFrom(AbstractButton.class, getType(f))),
 					f -> cast(AbstractButton.class,
 							isStatic(f) ? Narcissus.getStaticField(f) : Narcissus.getField(instance, f))),
 					x -> addActionListener(x, instance));
@@ -350,6 +350,14 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 		} // try
 			//
+	}
+
+	private static Class<?> getType(final Field instance) {
+		return instance != null ? instance.getType() : null;
+	}
+
+	private static boolean isAssignableFrom(final Class<?> a, final Class<?> b) {
+		return a != null && b != null && a.isAssignableFrom(b);
 	}
 
 	private static <T> void forEach(final Stream<T> instance, final Consumer<? super T> action) {
@@ -653,7 +661,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 						f -> Objects.equals(getName(f), "first")), Collectors.toList()),
 				x -> get(x, 0), null);
 		//
-		if (first != null && Objects.equals(first.getType(), Integer.TYPE)) {
+		if (Objects.equals(getType(first), Integer.TYPE)) {
 			//
 			return Narcissus.getIntField(instance, first) >= 0 ? instance.group() : null;
 			//
@@ -1049,7 +1057,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				x -> get(x, 0), null);
 		//
 		if (field == null
-				|| (Objects.equals(field.getType(), Boolean.TYPE) && Narcissus.getBooleanField(instance, field))) {
+				|| (Objects.equals(getType(field), Boolean.TYPE) && Narcissus.getBooleanField(instance, field))) {
 			//
 			instance.setCertificateEntry(alias, cert);
 			//
@@ -1122,7 +1130,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				x -> get(x, 0), null);
 		//
 		final Enumeration<String> aliases = instance != null && (field == null
-				|| (Objects.equals(field.getType(), Boolean.TYPE) && Narcissus.getBooleanField(instance, field)))
+				|| (Objects.equals(getType(field), Boolean.TYPE) && Narcissus.getBooleanField(instance, field)))
 						? instance.aliases()
 						: null;
 		//

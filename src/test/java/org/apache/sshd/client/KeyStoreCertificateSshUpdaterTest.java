@@ -78,7 +78,8 @@ import io.github.toolfactory.narcissus.Narcissus;
 class KeyStoreCertificateSshUpdaterTest {
 
 	private static Method METHOD_ADD, METHOD_GET_NAME, METHOD_GET_CLASS, METHOD_NEW_DOCUMENT_BUILDER,
-			METHOD_ADD_CHARACTER, METHOD_IS_STATIC, METHOD_CAST, METHOD_GET_AS_BOOLEAN_AND_GET = null;
+			METHOD_ADD_CHARACTER, METHOD_IS_STATIC, METHOD_CAST, METHOD_GET_AS_BOOLEAN_AND_GET,
+			METHOD_IS_ASSIGNABLE_FROM = null;
 
 	@BeforeClass
 	static void beforeClass() throws NoSuchMethodException {
@@ -103,6 +104,9 @@ class KeyStoreCertificateSshUpdaterTest {
 		//
 		(METHOD_GET_AS_BOOLEAN_AND_GET = clz.getDeclaredMethod("getAsBooleanAndGet", BooleanSupplier.class,
 				Supplier.class)).setAccessible(true);
+		//
+		(METHOD_IS_ASSIGNABLE_FROM = clz.getDeclaredMethod("isAssignableFrom", Class.class, Class.class))
+				.setAccessible(true);
 		//
 	}
 
@@ -399,7 +403,7 @@ class KeyStoreCertificateSshUpdaterTest {
 
 	private static String getName(final Member instance) throws Throwable {
 		try {
-			final Object obj = METHOD_GET_NAME.invoke(null, instance);
+			final Object obj = invoke(METHOD_GET_NAME, null, instance);
 			if (obj == null) {
 				return null;
 			} else if (obj instanceof String) {
@@ -411,9 +415,14 @@ class KeyStoreCertificateSshUpdaterTest {
 		}
 	}
 
+	private static Object invoke(final Method method, final Object instance, final Object... args)
+			throws IllegalAccessException, InvocationTargetException {
+		return method != null && method.getDeclaringClass() != null ? method.invoke(instance, args) : null;
+	}
+
 	private static Class<?> getClass(final Object instance) throws Throwable {
 		try {
-			final Object obj = METHOD_GET_CLASS.invoke(null, instance);
+			final Object obj = invoke(METHOD_GET_CLASS, null, instance);
 			if (obj == null) {
 				return null;
 			} else if (obj instanceof Class) {
@@ -437,7 +446,7 @@ class KeyStoreCertificateSshUpdaterTest {
 
 	private static <T> T cast(final Class<T> clz, final Object instance) throws Throwable {
 		try {
-			return (T) METHOD_CAST.invoke(null, clz, instance);
+			return (T) invoke(METHOD_CAST, null, clz, instance);
 		} catch (final InvocationTargetException e) {
 			throw e.getTargetException();
 		}
@@ -531,7 +540,7 @@ class KeyStoreCertificateSshUpdaterTest {
 
 	private static <E> void add(final Collection<E> instance, final E item) throws Throwable {
 		try {
-			METHOD_ADD.invoke(null, instance, item);
+			invoke(METHOD_ADD, null, instance, item);
 		} catch (final InvocationTargetException e) {
 			throw e.getTargetException();
 		}
@@ -715,7 +724,7 @@ class KeyStoreCertificateSshUpdaterTest {
 
 	private static boolean isStatic(final Member instance) throws Throwable {
 		try {
-			final Object obj = METHOD_IS_STATIC.invoke(null, instance);
+			final Object obj = invoke(METHOD_IS_STATIC, null, instance);
 			if (obj instanceof Boolean) {
 				return ((Boolean) obj).booleanValue();
 			}
@@ -727,7 +736,7 @@ class KeyStoreCertificateSshUpdaterTest {
 
 	private static DocumentBuilder newDocumentBuilder(final DocumentBuilderFactory instance) throws Throwable {
 		try {
-			final Object obj = METHOD_NEW_DOCUMENT_BUILDER.invoke(null, instance);
+			final Object obj = invoke(METHOD_NEW_DOCUMENT_BUILDER, null, instance);
 			if (obj == null) {
 				return null;
 			} else if (obj instanceof DocumentBuilder) {
@@ -748,7 +757,7 @@ class KeyStoreCertificateSshUpdaterTest {
 
 	private static String addCharacter(final String instance, final int count, final char c) throws Throwable {
 		try {
-			final Object obj = METHOD_ADD_CHARACTER.invoke(null, instance, count, c);
+			final Object obj = invoke(METHOD_ADD_CHARACTER, null, instance, count, c);
 			if (obj == null) {
 				return null;
 			} else if (obj instanceof String) {
@@ -791,10 +800,19 @@ class KeyStoreCertificateSshUpdaterTest {
 	private static <T> T getAsBooleanAndGet(final BooleanSupplier booleanSupplier, final Supplier<T> supplier)
 			throws Throwable {
 		try {
-			return (T) METHOD_GET_AS_BOOLEAN_AND_GET.invoke(null, booleanSupplier, supplier);
+			return (T) invoke(METHOD_GET_AS_BOOLEAN_AND_GET, null, booleanSupplier, supplier);
 		} catch (final InvocationTargetException e) {
 			throw e.getTargetException();
 		}
+	}
+
+	@Test
+	void testIsAssignableFrom() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertEquals(invoke(METHOD_IS_ASSIGNABLE_FROM, null, Object.class, null), Boolean.FALSE);
+		//
+		Assert.assertEquals(invoke(METHOD_IS_ASSIGNABLE_FROM, null, String.class, Object.class), Boolean.FALSE);
+		//
 	}
 
 }
