@@ -241,8 +241,8 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 					KeyStoreCertificateSshUpdater.class.getDeclaredFields(), Arrays::stream, null);
 			//
 			forEach(map(filter(stream, f -> isAssignableFrom(AbstractButton.class, getType(f))),
-					f -> cast(AbstractButton.class,
-							isStatic(f) ? Narcissus.getStaticField(f) : Narcissus.getField(instance, f))),
+					f -> cast(AbstractButton.class, testAndApply(KeyStoreCertificateSshUpdater::isStatic, f,
+							Narcissus::getStaticField, x -> Narcissus.getField(instance, x)))),
 					x -> addActionListener(x, instance));
 			//
 			final JFrame jFrame = getAsBooleanAndGet(() -> !GraphicsEnvironment.isHeadless(), JFrame::new);
