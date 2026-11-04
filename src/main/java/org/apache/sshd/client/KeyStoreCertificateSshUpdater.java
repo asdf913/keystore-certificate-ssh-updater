@@ -178,7 +178,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 		//
 		final Map<String, String> map = toMap(args);
 		//
-		if (isGui() || Objects.equals(get(map, "gui"), "true")) {
+		if (Boolean.logicalOr(isGui(), Objects.equals(get(map, "gui"), "true"))) {
 			//
 			final JFrame jFrame = getAsBooleanAndGet(() -> !GraphicsEnvironment.isHeadless(), JFrame::new);
 			//
