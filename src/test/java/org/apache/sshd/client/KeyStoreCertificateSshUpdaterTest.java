@@ -375,6 +375,10 @@ class KeyStoreCertificateSshUpdaterTest {
 				//
 				return getAsBoolean;
 				//
+			} else if (proxy instanceof Supplier && Objects.equals(name, "get")) {
+				//
+				return null;
+				//
 			} // if
 				//
 			throw new Throwable(name);
