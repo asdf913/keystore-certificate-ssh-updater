@@ -49,7 +49,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.BiPredicate;
+import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -160,7 +162,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 		//
 		if (isGui() || Objects.equals(get(map, "gui"), "true")) {
 			//
-			final JFrame jFrame = !GraphicsEnvironment.isHeadless() ? new JFrame() : null;
+			final JFrame jFrame = getAsBooleanAndGet(() -> !GraphicsEnvironment.isHeadless(), JFrame::new);
 			//
 			if (jFrame != null) {
 				//
@@ -326,6 +328,10 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 		} // try
 			//
+	}
+
+	private static <T> T getAsBooleanAndGet(final BooleanSupplier booleanSupplier, final Supplier<T> supplier) {
+		return booleanSupplier != null && booleanSupplier.getAsBoolean() && supplier != null ? supplier.get() : null;
 	}
 
 	private static File createTempFile(final String prefix, final String suffix) {

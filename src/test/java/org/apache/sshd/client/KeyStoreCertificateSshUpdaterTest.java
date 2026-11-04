@@ -27,7 +27,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.BiPredicate;
+import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.MatchResult;
 import java.util.stream.Stream;
 
@@ -45,6 +47,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.function.FailableBiFunction;
 import org.apache.commons.lang3.function.FailableFunction;
 import org.apache.commons.lang3.function.FailableSupplier;
+import org.apache.commons.lang3.function.Suppliers;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.sshd.client.channel.ClientChannel;
 import org.apache.sshd.client.future.AuthFuture;
@@ -73,7 +76,7 @@ import io.github.toolfactory.narcissus.Narcissus;
 class KeyStoreCertificateSshUpdaterTest {
 
 	private static Method METHOD_ADD, METHOD_GET_NAME, METHOD_GET_CLASS, METHOD_NEW_DOCUMENT_BUILDER,
-			METHOD_ADD_CHARACTER, METHOD_IS_STATIC, METHOD_CAST = null;
+			METHOD_ADD_CHARACTER, METHOD_IS_STATIC, METHOD_CAST, METHOD_GET_AS_BOOLEAN_AND_GET = null;
 
 	@BeforeClass
 	static void beforeClass() throws NoSuchMethodException {
@@ -96,11 +99,14 @@ class KeyStoreCertificateSshUpdaterTest {
 		//
 		(METHOD_CAST = clz.getDeclaredMethod("cast", Class.class, Object.class)).setAccessible(true);
 		//
+		(METHOD_GET_AS_BOOLEAN_AND_GET = clz.getDeclaredMethod("getAsBooleanAndGet", BooleanSupplier.class,
+				Supplier.class)).setAccessible(true);
+		//
 	}
 
 	private static class IH implements InvocationHandler {
 
-		private Boolean add, test, containsKey, isSuccess, hasMoreElements, isOpened = null;
+		private Boolean add, test, containsKey, isSuccess, hasMoreElements, isOpened, getAsBoolean = null;
 
 		private Integer size, length, modifiers = null;
 
@@ -364,6 +370,10 @@ class KeyStoreCertificateSshUpdaterTest {
 			} else if (proxy instanceof MatchResult && Objects.equals(name, "group")) {
 				//
 				return null;
+				//
+			} else if (proxy instanceof BooleanSupplier && Objects.equals(name, "getAsBoolean")) {
+				//
+				return getAsBoolean;
 				//
 			} // if
 				//
@@ -750,6 +760,26 @@ class KeyStoreCertificateSshUpdaterTest {
 		//
 		instance.actionPerformed(new ActionEvent(btnExecute, 0, null));
 		//
+	}
+
+	@Test
+	void testGetAsBooleanAndGet() throws Throwable {
+		//
+		Assert.assertNull(getAsBooleanAndGet(() -> false, null));
+		//
+		Assert.assertNull(getAsBooleanAndGet(() -> true, null));
+		//
+		Assert.assertNull(getAsBooleanAndGet(() -> true, Suppliers.nul()));
+		//
+	}
+
+	private static <T> T getAsBooleanAndGet(final BooleanSupplier booleanSupplier, final Supplier<T> supplier)
+			throws Throwable {
+		try {
+			return (T) METHOD_GET_AS_BOOLEAN_AND_GET.invoke(null, booleanSupplier, supplier);
+		} catch (final InvocationTargetException e) {
+			throw e.getTargetException();
+		}
 	}
 
 }
