@@ -106,6 +106,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.validator.routines.DomainValidator;
+import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.sshd.client.channel.ChannelExec;
 import org.apache.sshd.client.channel.ClientChannel;
 import org.apache.sshd.client.future.AuthFuture;
@@ -1439,7 +1440,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 							f -> Objects.equals(getName(f), VALUE)), Collectors.toList()),
 					y -> get(y, 0), null);
 			//
-			return field == null || Narcissus.getField(x, field) != null;
+			return (field == null || Narcissus.getField(x, field) != null) && isValid(UrlValidator.getInstance(), x);
 			//
 		}, url, URL::new, null)));
 		//
@@ -1469,6 +1470,24 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 		} // if
 			//
 		return testAndApply(x -> size(x) == 1, result, x -> get(x, 0), null);
+		//
+	}
+
+	private static boolean isValid(final UrlValidator instance, final String value) {
+		//
+		if (instance == null || value == null) {
+			//
+			return false;
+			//
+		} // if
+			//
+		final Field field = testAndApply(y -> size(y) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(value), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), VALUE)), Collectors.toList()),
+				y -> get(y, 0), null);
+		//
+		return (field == null || Narcissus.getField(value, field) != null) && instance.isValid(value);
 		//
 	}
 
