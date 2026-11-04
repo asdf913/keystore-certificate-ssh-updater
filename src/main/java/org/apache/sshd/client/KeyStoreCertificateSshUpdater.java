@@ -211,7 +211,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			instance.add(new JLabel("Public Key"));
 			//
-			instance.add(instance.tfPublicKey = new JPasswordField(), growx);
+			instance.add(instance.tfPublicKey = new JTextField(), growx);
 			//
 			instance.tfPublicKey.setEditable(false);
 			//
