@@ -5,6 +5,9 @@ import java.awt.Container;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -215,6 +218,29 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			setDocument(instance.tfPort, createDocument(instance.tfPort, Collections.max(getPorts())));
 			//
+			addKeyListener(instance.tfPort, new KeyAdapter() {
+
+				@Override
+				public void keyTyped(final KeyEvent evt) {
+					//
+					if (evt == null) {
+						//
+						return;
+						//
+					} // if
+						//
+					final char c = evt.getKeyChar();
+					//
+					if (!((c >= '0') && (c <= '9') || (c == KeyEvent.VK_BACK_SPACE) || (c == KeyEvent.VK_DELETE))) {
+						//
+						evt.consume();
+						//
+					} // if
+						//
+				}
+
+			});
+			//
 			instance.add(new JLabel("User"));
 			//
 			instance.add(instance.tfUsername = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
@@ -364,6 +390,12 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 		} // try
 			//
+	}
+
+	private static void addKeyListener(final Component instance, final KeyListener keyListener) {
+		if (instance != null) {
+			instance.addKeyListener(keyListener);
+		}
 	}
 
 	private static javax.swing.text.Document createDocument(final JTextComponent jTextComponent,
