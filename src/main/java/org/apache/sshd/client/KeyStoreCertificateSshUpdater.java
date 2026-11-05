@@ -24,6 +24,7 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
+import java.net.InetSocketAddress;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.FileSystems;
@@ -47,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.EventObject;
@@ -80,7 +82,10 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
 import javax.swing.text.JTextComponent;
+import javax.swing.text.PlainDocument;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -98,6 +103,7 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.function.FailableBiConsumer;
 import org.apache.commons.lang3.function.FailableBiFunction;
 import org.apache.commons.lang3.function.FailableConsumer;
@@ -129,6 +135,11 @@ import org.apache.sshd.putty.PuttyKeyUtils;
 import org.apache.sshd.sftp.client.SftpClient;
 import org.apache.sshd.sftp.client.SftpClientFactory;
 import org.d2ab.function.ObjIntPredicate;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -201,6 +212,93 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			final String growx = "growx";
 			//
 			instance.add(instance.tfPort = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
+			//
+			final Collection<Integer> ports = new ArrayList<>();
+			//
+			try (final InputStream is = KeyStoreCertificateSshUpdater.class.getResourceAsStream(
+					StringUtils.join("/", replace(Strings.CS, getName(InetSocketAddress.class), ".", "/"), ".class"))) {
+				//
+				new ClassReader(is).accept(new ClassVisitor(Opcodes.ASM9) {
+
+					@Override
+					public MethodVisitor visitMethod(final int access, final String name, final String descriptor,
+							final String signature, final String[] exceptions) {
+						//
+						if (Objects.equals(name, "checkPort")) {
+							//
+							return new MethodVisitor(Opcodes.ASM9) {
+
+								private Object ldc = null;
+
+								@Override
+								public void visitJumpInsn(final int opcode, final Label label) {
+									//
+									Number number = null;
+									//
+									if (opcode == Opcodes.IFLT) {
+										//
+										add(ports, 0);
+										//
+									} else if (opcode == Opcodes.IF_ICMPLE
+											&& (number = cast(Number.class, ldc)) != null) {
+										//
+										add(ports, intValue(number, 0));
+										//
+									} else {
+										//
+										throw new RuntimeException();
+										//
+									} // if
+										//
+								}
+
+								@Override
+								public void visitLdcInsn(final Object value) {
+									//
+									ldc = value;
+									//
+								}
+
+							};
+							//
+						} // if
+							//
+						return super.visitMethod(access, name, descriptor, signature, exceptions);
+						//
+					}
+
+				}, 0);
+				//
+			} // try
+				//
+				//
+			final int maxPortNumber = intValue(Collections.max(ports), 0);
+			//
+			final int maxPortStringLength = StringUtils.length(Integer.toString(maxPortNumber));
+			//
+			instance.tfPort.setDocument(new PlainDocument() {
+				@Override
+				public void insertString(final int offset, final String string, final AttributeSet attributeSet)
+						throws BadLocationException {
+					//
+					if ((getLength() + StringUtils.length(string)) <= maxPortStringLength) {
+						//
+						final StringBuilder sb = testAndApply(Objects::nonNull,
+								KeyStoreCertificateSshUpdater.getText(instance.tfPort), StringBuilder::new, null);
+						//
+						if (NumberUtils.isDigits(Objects.toString(insert(sb, offset, string)))
+								&& NumberUtils.toInt(Objects.toString(sb)) > maxPortNumber) {
+							//
+							return;
+							//
+						} // if
+							//
+						super.insertString(offset, string, attributeSet);
+						//
+					} // if
+						//
+				}
+			});
 			//
 			instance.add(new JLabel("User"));
 			//
@@ -351,6 +449,50 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 		} // try
 			//
+	}
+
+	private static StringBuilder insert(final StringBuilder instance, final int offset, final String string) {
+		//
+		if (instance == null) {
+			//
+			return instance;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), VALUE)), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return field == null || Narcissus.getField(instance, field) != null ? instance.insert(offset, string)
+				: instance;
+		//
+	}
+
+	private static int intValue(final Number instance, final int defaultValue) {
+		return instance != null ? instance.intValue() : defaultValue;
+	}
+
+	private static String replace(final Strings instance, final String text, final String searchString,
+			final String replacement) {
+		//
+		if (instance == null || text == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(text), FieldUtils::getAllFieldsList, null)),
+						x -> Objects.equals(getName(x), VALUE)), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return field == null || Narcissus.getField(text, field) != null
+				? instance.replace(text, searchString, replacement)
+				: null;
+		//
 	}
 
 	private static Class<?> getType(final Field instance) {

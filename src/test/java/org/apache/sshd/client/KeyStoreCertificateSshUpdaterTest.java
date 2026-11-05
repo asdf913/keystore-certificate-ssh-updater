@@ -46,6 +46,7 @@ import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.function.FailableBiFunction;
 import org.apache.commons.lang3.function.FailableFunction;
 import org.apache.commons.lang3.function.FailableSupplier;
@@ -648,6 +649,14 @@ class KeyStoreCertificateSshUpdaterTest {
 					//
 					add(collection, Narcissus.allocateInstance(JButton.class));
 					//
+				} else if (Objects.equals(parameterType, Number.class)) {
+					//
+					add(collection, Narcissus.allocateInstance(Integer.class));
+					//
+				} else if (Objects.equals(parameterType, Strings.class)) {
+					//
+					add(collection, Narcissus.allocateInstance(getClass(Strings.CI)));
+					//
 				} else if (parameterType != null && parameterType.isInterface()) {
 					//
 					if ((ih = ObjectUtils.getIfNull(ih, IH::new)) != null) {
@@ -708,7 +717,9 @@ class KeyStoreCertificateSshUpdaterTest {
 					|| Boolean.logicalAnd(Objects.equals(name, "isOpened"),
 							Arrays.equals(parameterTypes, new Class<?>[] { OpenFuture.class }))
 					|| Boolean.logicalAnd(Objects.equals(name, "getName"),
-							Arrays.equals(parameterTypes, new Class<?>[] { Class.class }))) {
+							Arrays.equals(parameterTypes, new Class<?>[] { Class.class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "insert"), Arrays.equals(parameterTypes,
+							new Class<?>[] { StringBuilder.class, Integer.TYPE, String.class }))) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
