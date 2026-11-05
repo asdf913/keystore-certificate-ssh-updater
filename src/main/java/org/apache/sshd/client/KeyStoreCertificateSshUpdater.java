@@ -213,66 +213,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			instance.add(instance.tfPort = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
 			//
-			final Collection<Integer> ports = new ArrayList<>();
-			//
-			try (final InputStream is = KeyStoreCertificateSshUpdater.class.getResourceAsStream(
-					StringUtils.join("/", replace(Strings.CS, getName(InetSocketAddress.class), ".", "/"), ".class"))) {
-				//
-				new ClassReader(is).accept(new ClassVisitor(Opcodes.ASM9) {
-
-					@Override
-					public MethodVisitor visitMethod(final int access, final String name, final String descriptor,
-							final String signature, final String[] exceptions) {
-						//
-						if (Objects.equals(name, "checkPort")) {
-							//
-							return new MethodVisitor(Opcodes.ASM9) {
-
-								private Object ldc = null;
-
-								@Override
-								public void visitJumpInsn(final int opcode, final Label label) {
-									//
-									Number number = null;
-									//
-									if (opcode == Opcodes.IFLT) {
-										//
-										add(ports, 0);
-										//
-									} else if (opcode == Opcodes.IF_ICMPLE
-											&& (number = cast(Number.class, ldc)) != null) {
-										//
-										add(ports, intValue(number, 0));
-										//
-									} else {
-										//
-										throw new RuntimeException();
-										//
-									} // if
-										//
-								}
-
-								@Override
-								public void visitLdcInsn(final Object value) {
-									//
-									ldc = value;
-									//
-								}
-
-							};
-							//
-						} // if
-							//
-						return super.visitMethod(access, name, descriptor, signature, exceptions);
-						//
-					}
-
-				}, 0);
-				//
-			} // try
-				//
-				//
-			final int maxPortNumber = intValue(Collections.max(ports), 0);
+			final int maxPortNumber = intValue(Collections.max(getPorts()), 0);
 			//
 			final int maxPortStringLength = StringUtils.length(Integer.toString(maxPortNumber));
 			//
@@ -449,6 +390,69 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 		} // try
 			//
+	}
+
+	private static Collection<Integer> getPorts() throws IOException {
+
+		final Collection<Integer> ports = new ArrayList<>();
+		//
+		try (final InputStream is = KeyStoreCertificateSshUpdater.class.getResourceAsStream(
+				StringUtils.join("/", replace(Strings.CS, getName(InetSocketAddress.class), ".", "/"), ".class"))) {
+			//
+			new ClassReader(is).accept(new ClassVisitor(Opcodes.ASM9) {
+
+				@Override
+				public MethodVisitor visitMethod(final int access, final String name, final String descriptor,
+						final String signature, final String[] exceptions) {
+					//
+					if (Objects.equals(name, "checkPort")) {
+						//
+						return new MethodVisitor(Opcodes.ASM9) {
+
+							private Object ldc = null;
+
+							@Override
+							public void visitJumpInsn(final int opcode, final Label label) {
+								//
+								Number number = null;
+								//
+								if (opcode == Opcodes.IFLT) {
+									//
+									add(ports, 0);
+									//
+								} else if (opcode == Opcodes.IF_ICMPLE && (number = cast(Number.class, ldc)) != null) {
+									//
+									add(ports, intValue(number, 0));
+									//
+								} else {
+									//
+									throw new RuntimeException();
+									//
+								} // if
+									//
+							}
+
+							@Override
+							public void visitLdcInsn(final Object value) {
+								//
+								ldc = value;
+								//
+							}
+
+						};
+						//
+					} // if
+						//
+					return super.visitMethod(access, name, descriptor, signature, exceptions);
+					//
+				}
+
+			}, 0);
+			//
+		} // try
+			//
+		return ports;
+		//
 	}
 
 	private static StringBuilder insert(final StringBuilder instance, final int offset, final String string) {

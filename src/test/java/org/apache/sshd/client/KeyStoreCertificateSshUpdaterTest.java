@@ -511,7 +511,8 @@ class KeyStoreCertificateSshUpdaterTest {
 			//
 			result = isStatic(m) ? Narcissus.invokeStaticMethod(m, os) : Narcissus.invokeMethod(instance, m, os);
 			//
-			if (contains(Arrays.asList(Integer.TYPE, Boolean.TYPE), getReturnType(m))) {
+			if (contains(Arrays.asList(Integer.TYPE, Boolean.TYPE), getReturnType(m))
+					|| Boolean.logicalAnd(Objects.equals(getName(m), "getPorts"), m.getParameterCount() == 0)) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
@@ -718,8 +719,10 @@ class KeyStoreCertificateSshUpdaterTest {
 							Arrays.equals(parameterTypes, new Class<?>[] { OpenFuture.class }))
 					|| Boolean.logicalAnd(Objects.equals(name, "getName"),
 							Arrays.equals(parameterTypes, new Class<?>[] { Class.class }))
-					|| Boolean.logicalAnd(Objects.equals(name, "insert"), Arrays.equals(parameterTypes,
-							new Class<?>[] { StringBuilder.class, Integer.TYPE, String.class }))) {
+					|| Boolean.logicalAnd(Objects.equals(name, "insert"),
+							Arrays.equals(parameterTypes,
+									new Class<?>[] { StringBuilder.class, Integer.TYPE, String.class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "getPorts"), m.getParameterCount() == 0)) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
