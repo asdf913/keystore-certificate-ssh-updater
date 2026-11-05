@@ -466,7 +466,7 @@ class KeyStoreCertificateSshUpdaterTest {
 		//
 		Object result = null;
 		//
-		String toString = null;
+		String toString, name = null;
 		//
 		Object[] os = null;
 		//
@@ -512,7 +512,9 @@ class KeyStoreCertificateSshUpdaterTest {
 			result = isStatic(m) ? Narcissus.invokeStaticMethod(m, os) : Narcissus.invokeMethod(instance, m, os);
 			//
 			if (contains(Arrays.asList(Integer.TYPE, Boolean.TYPE), getReturnType(m))
-					|| Boolean.logicalAnd(Objects.equals(getName(m), "getPorts"), m.getParameterCount() == 0)) {
+					|| Boolean.logicalAnd(Objects.equals(name = getName(m), "getPorts"), m.getParameterCount() == 0)
+					|| Boolean.logicalAnd(Objects.equals(name, "createDocument"),
+							Arrays.equals(parameterTypes, new Class<?>[] { JTextComponent.class, Number.class }))) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
@@ -722,7 +724,9 @@ class KeyStoreCertificateSshUpdaterTest {
 					|| Boolean.logicalAnd(Objects.equals(name, "insert"),
 							Arrays.equals(parameterTypes,
 									new Class<?>[] { StringBuilder.class, Integer.TYPE, String.class }))
-					|| Boolean.logicalAnd(Objects.equals(name, "getPorts"), m.getParameterCount() == 0)) {
+					|| Boolean.logicalAnd(Objects.equals(name, "getPorts"), m.getParameterCount() == 0)
+					|| Boolean.logicalAnd(Objects.equals(name, "createDocument"),
+							Arrays.equals(parameterTypes, new Class<?>[] { JTextComponent.class, Number.class }))) {
 				//
 				Assert.assertNotNull(result, toString);
 				//

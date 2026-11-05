@@ -213,33 +213,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			instance.add(instance.tfPort = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
 			//
-			final int maxPortNumber = intValue(Collections.max(getPorts()), 0);
-			//
-			final int maxPortStringLength = StringUtils.length(Integer.toString(maxPortNumber));
-			//
-			instance.tfPort.setDocument(new PlainDocument() {
-				@Override
-				public void insertString(final int offset, final String string, final AttributeSet attributeSet)
-						throws BadLocationException {
-					//
-					if ((getLength() + StringUtils.length(string)) <= maxPortStringLength) {
-						//
-						final StringBuilder sb = testAndApply(Objects::nonNull,
-								KeyStoreCertificateSshUpdater.getText(instance.tfPort), StringBuilder::new, null);
-						//
-						if (NumberUtils.isDigits(Objects.toString(insert(sb, offset, string)))
-								&& NumberUtils.toInt(Objects.toString(sb)) > maxPortNumber) {
-							//
-							return;
-							//
-						} // if
-							//
-						super.insertString(offset, string, attributeSet);
-						//
-					} // if
-						//
-				}
-			});
+			setDocument(instance.tfPort, createDocument(instance.tfPort, Collections.max(getPorts())));
 			//
 			instance.add(new JLabel("User"));
 			//
@@ -390,6 +364,41 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 		} // try
 			//
+	}
+
+	private static javax.swing.text.Document createDocument(final JTextComponent jTextComponent,
+			final Number maxNumber) {
+		//
+		return new PlainDocument() {
+			@Override
+			public void insertString(final int offset, final String string, final AttributeSet attributeSet)
+					throws BadLocationException {
+				//
+				if ((getLength() + StringUtils.length(string)) <= StringUtils.length(Objects.toString(maxNumber))) {
+					//
+					final StringBuilder sb = testAndApply(Objects::nonNull,
+							KeyStoreCertificateSshUpdater.getText(jTextComponent), StringBuilder::new, null);
+					//
+					if (NumberUtils.isDigits(Objects.toString(insert(sb, offset, string))) && maxNumber != null
+							&& NumberUtils.toInt(Objects.toString(sb)) > intValue(maxNumber, 0)) {
+						//
+						return;
+						//
+					} // if
+						//
+					super.insertString(offset, string, attributeSet);
+					//
+				} // if
+					//
+			}
+		};
+		//
+	}
+
+	private static void setDocument(final JTextComponent instance, final javax.swing.text.Document document) {
+		if (instance != null && instance.getComponentOrientation() != null) {
+			instance.setDocument(document);
+		}
 	}
 
 	private static Collection<Integer> getPorts() throws IOException {
