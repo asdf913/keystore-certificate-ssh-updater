@@ -1060,6 +1060,14 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			return instnace != null ? instnace.getKeytool() : null;
 		}
 
+		private HostAndPort getHostAndPort() {
+			return hostAndPort;
+		}
+
+		private static HostAndPort getHostAndPort(final Config instnace) {
+			return instnace != null ? instnace.getHostAndPort() : null;
+		}
+
 	}
 
 	private static void perform(final SshClient sshClient, final Config config, final File tempFile, final String url,
@@ -1069,7 +1077,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 		//
 		final int length = Math.max(StringUtils.length(algorithm), 9);
 		//
-		final HostAndPort hostAndPort = config != null ? config.hostAndPort : null;
+		final HostAndPort hostAndPort = Config.getHostAndPort(config);
 		//
 		final String host = getHost(hostAndPort);
 		//
