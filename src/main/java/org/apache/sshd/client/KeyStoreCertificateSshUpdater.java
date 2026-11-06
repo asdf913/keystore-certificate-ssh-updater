@@ -1164,6 +1164,17 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 								//
 							} // try
 								//
+							if (!Boolean.parseBoolean(StringUtils.trim(executeRemoteCommand(clientSession,
+									String.join("", "[ -f ", StringUtils.trim(executeRemoteCommand(clientSession,
+											String.join("", "echo ", file, ".`date -r ", file, " ", dateFormat, "`"))),
+											" ] && echo true||echo false"))))) {
+								//
+								info(logger, "KeyStore Backup Failed.");
+								//
+								return;
+								//
+							} // if
+								//
 						} // if
 							//
 					} catch (final RemoteException e) {
