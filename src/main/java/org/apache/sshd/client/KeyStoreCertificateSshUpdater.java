@@ -1070,7 +1070,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 		//
 		final String host = getHost(hostAndPort);
 		//
-		final int port = hostAndPort != null && hostAndPort.hasPort() ? hostAndPort.getPort()
+		final int port = hasPort(hostAndPort) ? getPort(hostAndPort, SshConstants.DEFAULT_PORT)
 				: SshConstants.DEFAULT_PORT;
 		//
 		final BasicCredentialsProvider basicCredentialsProvider = config != null ? config.basicCredentialsProvider
@@ -1239,6 +1239,14 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 		} // try
 			//
+	}
+
+	private static boolean hasPort(final HostAndPort instance) {
+		return instance != null && instance.hasPort();
+	}
+
+	private static int getPort(final HostAndPort instance, final int defaultValue) {
+		return instance != null && hasPort(instance) ? instance.getPort() : defaultValue;
 	}
 
 	private static Boolean isOpened(final OpenFuture instance) {
