@@ -218,28 +218,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			setDocument(instance.tfPort, createDocument(instance.tfPort, Collections.max(getPorts())));
 			//
-			addKeyListener(instance.tfPort, new KeyAdapter() {
-
-				@Override
-				public void keyTyped(final KeyEvent evt) {
-					//
-					if (evt == null) {
-						//
-						return;
-						//
-					} // if
-						//
-					final char c = evt.getKeyChar();
-					//
-					if (!((c >= '0') && (c <= '9') || (c == KeyEvent.VK_BACK_SPACE) || (c == KeyEvent.VK_DELETE))) {
-						//
-						evt.consume();
-						//
-					} // if
-						//
-				}
-
-			});
+			addKeyListener(instance.tfPort, createKeyListener());
 			//
 			instance.add(new JLabel("User"));
 			//
@@ -390,6 +369,33 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 		} // try
 			//
+	}
+
+	private static KeyListener createKeyListener() {
+		//
+		return new KeyAdapter() {
+
+			@Override
+			public void keyTyped(final KeyEvent evt) {
+				//
+				if (evt == null) {
+					//
+					return;
+					//
+				} // if
+					//
+				final char c = evt.getKeyChar();
+				//
+				if (!((c >= '0') && (c <= '9') || (c == KeyEvent.VK_BACK_SPACE) || (c == KeyEvent.VK_DELETE))) {
+					//
+					evt.consume();
+					//
+				} // if
+					//
+			}
+
+		};
+		//
 	}
 
 	private static void addKeyListener(final Component instance, final KeyListener keyListener) {

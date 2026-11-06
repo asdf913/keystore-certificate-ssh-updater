@@ -514,7 +514,8 @@ class KeyStoreCertificateSshUpdaterTest {
 			if (contains(Arrays.asList(Integer.TYPE, Boolean.TYPE), getReturnType(m))
 					|| Boolean.logicalAnd(Objects.equals(name = getName(m), "getPorts"), m.getParameterCount() == 0)
 					|| Boolean.logicalAnd(Objects.equals(name, "createDocument"),
-							Arrays.equals(parameterTypes, new Class<?>[] { JTextComponent.class, Number.class }))) {
+							Arrays.equals(parameterTypes, new Class<?>[] { JTextComponent.class, Number.class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "createKeyListener"), m.getParameterCount() == 0)) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
@@ -726,7 +727,8 @@ class KeyStoreCertificateSshUpdaterTest {
 									new Class<?>[] { StringBuilder.class, Integer.TYPE, String.class }))
 					|| Boolean.logicalAnd(Objects.equals(name, "getPorts"), m.getParameterCount() == 0)
 					|| Boolean.logicalAnd(Objects.equals(name, "createDocument"),
-							Arrays.equals(parameterTypes, new Class<?>[] { JTextComponent.class, Number.class }))) {
+							Arrays.equals(parameterTypes, new Class<?>[] { JTextComponent.class, Number.class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "createKeyListener"), m.getParameterCount() == 0)) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
