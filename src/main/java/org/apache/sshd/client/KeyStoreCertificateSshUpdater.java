@@ -66,6 +66,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.function.ToIntFunction;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -1070,8 +1071,8 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 		//
 		final String host = getHost(hostAndPort);
 		//
-		final int port = hasPort(hostAndPort) ? getPort(hostAndPort, SshConstants.DEFAULT_PORT)
-				: SshConstants.DEFAULT_PORT;
+		final int port = testAndApplyAsInt(KeyStoreCertificateSshUpdater::hasPort, hostAndPort,
+				x -> getPort(x, SshConstants.DEFAULT_PORT), null, SshConstants.DEFAULT_PORT);
 		//
 		final BasicCredentialsProvider basicCredentialsProvider = config != null ? config.basicCredentialsProvider
 				: null;
@@ -1239,6 +1240,16 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 		} // try
 			//
+	}
+
+	private static <T> int testAndApplyAsInt(final Predicate<T> predicate, final T value,
+			final ToIntFunction<T> functionTrue, final ToIntFunction<T> functionFalse, final int defaultValue) {
+		return test(predicate, value) ? applyAsInt(functionTrue, value, defaultValue)
+				: applyAsInt(functionFalse, value, defaultValue);
+	}
+
+	private static <T> int applyAsInt(final ToIntFunction<T> instance, final T value, final int defaultValue) {
+		return instance != null ? instance.applyAsInt(value) : defaultValue;
 	}
 
 	private static boolean hasPort(final HostAndPort instance) {

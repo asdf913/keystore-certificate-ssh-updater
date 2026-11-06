@@ -31,6 +31,7 @@ import java.util.function.BiPredicate;
 import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.function.ToIntFunction;
 import java.util.regex.MatchResult;
 import java.util.stream.Stream;
 
@@ -115,7 +116,7 @@ class KeyStoreCertificateSshUpdaterTest {
 
 		private Boolean add, test, containsKey, isSuccess, hasMoreElements, isOpened, getAsBoolean = null;
 
-		private Integer size, length, modifiers = null;
+		private Integer size, length, modifiers, applyAsInt = null;
 
 		@Override
 		public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
@@ -389,6 +390,10 @@ class KeyStoreCertificateSshUpdaterTest {
 			} else if (proxy instanceof Supplier && Objects.equals(name, "get")) {
 				//
 				return null;
+				//
+			} else if (proxy instanceof ToIntFunction && Objects.equals(name, "applyAsInt")) {
+				//
+				return applyAsInt;
 				//
 			} // if
 				//
