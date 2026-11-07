@@ -341,7 +341,8 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			final Properties properties = new Properties();
 			//
-			try (final InputStream is = testAndApply(x -> exists(x) && isFile(x),
+			try (final InputStream is = testAndApply(
+					x -> and(x, KeyStoreCertificateSshUpdater::exists, KeyStoreCertificateSshUpdater::isFile),
 					new File("KeyStoreCertificateSshUpdater.properties"), FileInputStream::new, null)) {
 				//
 				testAndAccept(Objects::nonNull, is, properties::load);
