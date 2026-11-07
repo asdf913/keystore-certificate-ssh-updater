@@ -1449,7 +1449,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 					//
 					info(logger, format, StringUtils.rightPad("alias", length), alias);
 					//
-					final File filePem = new File(String.join(".", alias, "pem"));
+					final File filePem = new File(String.join(".", replace(Strings.CS, alias, "*", ""), "pem"));
 					//
 					info(logger, format, StringUtils.rightPad("filePem", length), getAbsolutePath(filePem));
 					//
