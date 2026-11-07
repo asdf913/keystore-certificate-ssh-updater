@@ -119,6 +119,8 @@ class KeyStoreCertificateSshUpdaterTest {
 
 		private Integer size, length, modifiers, applyAsInt = null;
 
+		private Short nodeType = null;
+
 		@Override
 		public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
 			//
@@ -270,9 +272,14 @@ class KeyStoreCertificateSshUpdaterTest {
 					//
 			} else if (proxy instanceof Node) {
 				//
-				if (contains(Arrays.asList("getAttributes", "getNodeValue"), name)) {
+				if (contains(Arrays.asList("getAttributes", "getNodeValue", "getParentNode", "getNamespaceURI",
+						"getLocalName"), name)) {
 					//
 					return null;
+					//
+				} else if (Objects.equals(name, "getNodeType")) {
+					//
+					return nodeType;
 					//
 				} // if
 					//
@@ -693,6 +700,10 @@ class KeyStoreCertificateSshUpdaterTest {
 							} else if (Objects.equals(type, Integer.class)) {
 								//
 								Narcissus.setField(ih, f, Integer.valueOf(0));
+								//
+							} else if (Objects.equals(type, Short.class)) {
+								//
+								Narcissus.setField(ih, f, Short.valueOf((short) 0));
 								//
 							} // if
 								//

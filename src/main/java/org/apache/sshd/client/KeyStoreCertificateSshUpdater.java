@@ -337,70 +337,12 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			if (containsKey(map, "config")) {
 				//
-				final Document document = testAndApply(
+				perform(sshClient, testAndApply(
 						x -> and(x, KeyStoreCertificateSshUpdater::exists, KeyStoreCertificateSshUpdater::isFile),
 						testAndApply(Objects::nonNull, get(map, "config"), File::new, null),
-						x -> parse(newDocumentBuilder(DocumentBuilderFactory.newInstance()), x), null);
+						x -> parse(newDocumentBuilder(DocumentBuilderFactory.newInstance()), x), null), get(map, "url"),
+						tempFile);
 				//
-				final XPath xp = newXPath(XPathFactory.newInstance());
-				//
-				final NodeList nodeList1 = cast(NodeList.class,
-						evaluate(xp, "/*/config", document, XPathConstants.NODESET));
-				//
-				NodeList nodeList2 = null;
-				//
-				Node node1, node2 = null;
-				//
-				NamedNodeMap attributes = null;
-				//
-				Config config = null;
-				//
-				MessageDigest md = null;
-				//
-				final String url = get(map, "url");
-				//
-				for (int i = 0; i < getLength(nodeList1); i++) {
-					//
-					if ((node1 = item(nodeList1, i)) == null) {
-						//
-						continue;
-						//
-					} // if
-						//
-					(config = new Config()).hostAndPort = HostAndPort.fromParts(
-							getNodeValue(getNamedItem(attributes = getAttributes(node1), "host")),
-							NumberUtils.toInt(getNodeValue(getNamedItem(attributes, "port")), 22));
-					//
-					config.basicCredentialsProvider = new BasicCredentialsImpl(
-							getNodeValue(getNamedItem(attributes, "user")),
-							getNodeValue(getNamedItem(attributes, PASSWORD)));
-					//
-					config.publicKey = testAndApply(Objects::nonNull,
-							getNodeValue(getNamedItem(attributes, "publicKey")), File::new, null);
-					//
-					config.keytool = getNodeValue(getNamedItem(attributes, KEYTOOL));
-					//
-					nodeList2 = cast(NodeList.class, evaluate(xp, "*/keystore", node1, XPathConstants.NODESET));
-					//
-					for (int j = 0; j < getLength(nodeList2); j++) {
-						//
-						if ((node2 = item(nodeList2, j)) == null) {
-							//
-							continue;
-							//
-						} // if
-							//
-						config.keyStorePathPassword = Pair.of(
-								getNodeValue(getNamedItem(attributes = getAttributes(node2), "path")),
-								getNodeValue(getNamedItem(attributes, PASSWORD)));
-						//
-						perform(sshClient, config, tempFile, url,
-								md = ObjectUtils.getIfNull(md, () -> getMessageDigest(SHA1)), LOG);
-						//
-					} // for
-						//
-				} // for
-					//
 			} else {
 				//
 				final Config config = new Config();
@@ -421,6 +363,66 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			} // if
 				//
 		} // try
+			//
+	}
+
+	private static void perform(final SshClient sshClient, final Document document, final String url,
+			final File tempFile) throws Exception {
+		//
+		final XPath xp = newXPath(XPathFactory.newInstance());
+		//
+		final NodeList nodeList1 = cast(NodeList.class, evaluate(xp, "/*/config", document, XPathConstants.NODESET));
+		//
+		NodeList nodeList2 = null;
+		//
+		Node node1, node2 = null;
+		//
+		NamedNodeMap attributes = null;
+		//
+		Config config = null;
+		//
+		MessageDigest md = null;
+		//
+		for (int i = 0; i < getLength(nodeList1); i++) {
+			//
+			if ((node1 = item(nodeList1, i)) == null) {
+				//
+				continue;
+				//
+			} // if
+				//
+			(config = new Config()).hostAndPort = HostAndPort.fromParts(
+					getNodeValue(getNamedItem(attributes = getAttributes(node1), "host")),
+					NumberUtils.toInt(getNodeValue(getNamedItem(attributes, "port")), 22));
+			//
+			config.basicCredentialsProvider = new BasicCredentialsImpl(getNodeValue(getNamedItem(attributes, "user")),
+					getNodeValue(getNamedItem(attributes, PASSWORD)));
+			//
+			config.publicKey = testAndApply(Objects::nonNull, getNodeValue(getNamedItem(attributes, "publicKey")),
+					File::new, null);
+			//
+			config.keytool = getNodeValue(getNamedItem(attributes, KEYTOOL));
+			//
+			nodeList2 = cast(NodeList.class, evaluate(xp, "*/keystore", node1, XPathConstants.NODESET));
+			//
+			for (int j = 0; j < getLength(nodeList2); j++) {
+				//
+				if ((node2 = item(nodeList2, j)) == null) {
+					//
+					continue;
+					//
+				} // if
+					//
+				config.keyStorePathPassword = Pair.of(
+						getNodeValue(getNamedItem(attributes = getAttributes(node2), "path")),
+						getNodeValue(getNamedItem(attributes, PASSWORD)));
+				//
+				perform(sshClient, config, tempFile, url, md = ObjectUtils.getIfNull(md, () -> getMessageDigest(SHA1)),
+						LOG);
+				//
+			} // for
+				//
+		} // for
 			//
 	}
 
