@@ -2413,7 +2413,13 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 
 	private static void write(final File file, final Map<?, ?> map) {
 		//
-		try (final OutputStream os = testAndApply(x -> exists(x) && isFile(x), file, FileOutputStream::new, null)) {
+		if (exists(file) && !isFile(file)) {
+			//
+			return;
+			//
+		} // if
+			//
+		try (final OutputStream os = testAndApply(Objects::nonNull, file, FileOutputStream::new, null)) {
 			//
 			final Properties properties = new Properties();
 			//
