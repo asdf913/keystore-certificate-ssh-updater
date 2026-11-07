@@ -166,6 +166,7 @@ import org.xml.sax.SAXException;
 import com.google.common.net.HostAndPort;
 import com.sun.jna.platform.win32.Crypt32Util;
 import com.sun.jna.platform.win32.Kernel32Util;
+import com.sun.jna.platform.win32.Win32Exception;
 
 import io.github.toolfactory.narcissus.Narcissus;
 import net.miginfocom.swing.MigLayout;
@@ -339,10 +340,18 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 								&& Strings.CI.contains(Objects.toString(getKey(entry)), "password")
 								&& StringUtils.isNotEmpty(value)) {
 							//
-							value = testAndApply(Objects::nonNull,
-									Crypt32Util.cryptUnprotectData(decode(Base64.getDecoder(), value)), String::new,
-									null);
-							//
+							try {
+								//
+								value = testAndApply(Objects::nonNull,
+										Crypt32Util.cryptUnprotectData(decode(Base64.getDecoder(), value)), String::new,
+										null);
+								//
+							} catch (final Win32Exception e) {
+								//
+								continue;
+								//
+							} // try
+								//
 						} // if
 							//
 						jtc.setText(value);
