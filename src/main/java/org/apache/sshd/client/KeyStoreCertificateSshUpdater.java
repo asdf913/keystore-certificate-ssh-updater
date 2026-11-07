@@ -589,19 +589,18 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				final Stream<Field> stream = testAndApply(Objects::nonNull,
 						getDeclaredFields(KeyStoreCertificateSshUpdater.class), Arrays::stream, null);
 				//
-				final Map<String, String> map = map(
-						filter(stream, f -> isAssignableFrom(JTextComponent.class, getType(f))),
-						f -> Pair.of(getName(f),
-								getText(cast(JTextComponent.class,
+				final Map<String, String> m = collect(
+						map(filter(stream, f -> isAssignableFrom(JTextComponent.class, getType(f))),
+								f -> Pair.of(getName(f), getText(cast(JTextComponent.class,
 										testAndApply(KeyStoreCertificateSshUpdater::isStatic, f,
-												Narcissus::getStaticField, x -> Narcissus.getField(instance, x))))))
-						.collect(Collectors.toMap(KeyStoreCertificateSshUpdater::getKey,
+												Narcissus::getStaticField, x -> Narcissus.getField(instance, x)))))),
+						Collectors.toMap(KeyStoreCertificateSshUpdater::getKey,
 								KeyStoreCertificateSshUpdater::getValue));
 				//
 				if (((evt.getModifiersEx() & KeyEvent.CTRL_DOWN_MASK) != 0 && evt.getKeyCode() == KeyEvent.VK_X)
-						&& (instance.map == null || !Objects.equals(instance.map, map))) {
+						&& (instance.map == null || !Objects.equals(instance.map, m))) {
 					//
-					instance.map = map;
+					instance.map = m;
 					//
 				} // if
 					//
@@ -2405,11 +2404,11 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 	@Override
 	public void changedUpdate(final DocumentEvent evt) {
 		//
-		final Map<String, String> map = toMap(this);
+		final Map<String, String> m = toMap(this);
 		//
-		if (!isTestMode() && (this.map == null || !Objects.equals(this.map, map))) {
+		if (!isTestMode() && (this.map == null || !Objects.equals(this.map, m))) {
 			//
-			write(new File("KeyStoreCertificateSshUpdater.properties"), map);
+			write(new File("KeyStoreCertificateSshUpdater.properties"), m);
 			//
 		} // if
 			//
@@ -2465,11 +2464,11 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 	@Override
 	public void insertUpdate(final DocumentEvent evt) {
 		//
-		final Map<String, String> map = toMap(this);
+		final Map<String, String> m = toMap(this);
 		//
-		if (!isTestMode() && (this.map == null || !Objects.equals(this.map, map))) {
+		if (!isTestMode() && (this.map == null || !Objects.equals(this.map, m))) {
 			//
-			write(new File("KeyStoreCertificateSshUpdater.properties"), map);
+			write(new File("KeyStoreCertificateSshUpdater.properties"), m);
 			//
 		} // if
 			//
@@ -2478,11 +2477,11 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 	@Override
 	public void removeUpdate(final DocumentEvent evt) {
 		//
-		final Map<String, String> map = toMap(this);
+		final Map<String, String> m = toMap(this);
 		//
-		if (!isTestMode() && (this.map == null || !Objects.equals(this.map, map))) {
+		if (!isTestMode() && (this.map == null || !Objects.equals(this.map, m))) {
 			//
-			write(new File("KeyStoreCertificateSshUpdater.properties"), map);
+			write(new File("KeyStoreCertificateSshUpdater.properties"), m);
 			//
 		} // if
 			//
