@@ -1375,7 +1375,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				getUsername(basicCredentialsProvider), host,
 				(a, b) -> getSession(verify(connect(sshClient, a, b, port))), null)) {
 			//
-			testAndAccept(Objects::nonNull, getPassword(basicCredentialsProvider),
+			testAndAccept(StringUtils::isNotEmpty, getPassword(basicCredentialsProvider),
 					x -> addPasswordIdentity(clientSession, x));
 			//
 			testAndAccept(Objects::nonNull,
