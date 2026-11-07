@@ -36,6 +36,8 @@
 
 ## GUI
 
+Double click the jar under <b>Microsoft Windows</b> or <b>Apple MacOS</b>.
+
 ## Default Key Store Password
 
 <a href="https://docs.oracle.com/en/java/javase/27/docs/specs/man/keytool.html">The keytool Command</a>
