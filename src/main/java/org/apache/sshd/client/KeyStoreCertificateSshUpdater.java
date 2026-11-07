@@ -204,7 +204,12 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 	@Note("Username")
 	private JTextComponent tfUsername = null;
 
-	@Note("Password")
+	@Target(ElementType.FIELD)
+	@Retention(RetentionPolicy.RUNTIME)
+	private @interface Password {
+	}
+
+	@Password
 	private JTextComponent tfPassword = null;
 
 	@Note("Public Key")
@@ -216,7 +221,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 	@Note("Key Store Path")
 	private JTextComponent tfKeyStorePath = null;
 
-	@Note("Key Store Password")
+	@Password
 	private JTextComponent tfKeyStorePassword = null;
 
 	private JTextComponent tfUrl = null;
@@ -321,6 +326,8 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 				String value = null;
 				//
+				Field field = null;
+				//
 				for (final Entry<?, ?> entry : entrySet(properties)) {
 					//
 					if ((jtc = cast(JTextComponent.class,
@@ -334,12 +341,16 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 											x -> get(x, 0), null),
 									Narcissus::getField, null))) != null) {
 						//
-						value = Objects.toString(getValue(entry));
-						//
-						if (Boolean.logicalAnd(
-								Boolean.logicalAnd(isWindows(),
-										Strings.CI.contains(Objects.toString(getKey(entry)), "password")),
-								StringUtils.isNotEmpty(value))) {
+						if (Boolean
+								.logicalAnd(
+										Boolean.logicalAnd(isWindows(),
+												(field = testAndApply(x -> size(x) == 1, collect(
+														filter(stream(testAndApply(Objects::nonNull, getClass(instance),
+																FieldUtils::getAllFieldsList, null)),
+																f -> Objects.equals(getName(f), getKey(entry))),
+														Collectors.toList()), x -> get(x, 0), null)) != null
+														&& field.isAnnotationPresent(Password.class)),
+										StringUtils.isNotEmpty(value = Objects.toString(getValue(entry))))) {
 							//
 							try {
 								//
@@ -2505,7 +2516,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 							cast(JTextComponent.class, testAndApply(KeyStoreCertificateSshUpdater::isStatic, f,
 									Narcissus::getStaticField, x -> Narcissus.getField(instance, x))));
 					//
-					if (isWindows() && Strings.CI.contains(getName(f), "password")) {
+					if (isWindows() && f != null && f.isAnnotationPresent(Password.class)) {
 						//
 						value = encodeToString(Base64.getEncoder(), Crypt32Util.cryptProtectData(getBytes(value)));
 						//
