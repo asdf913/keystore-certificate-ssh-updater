@@ -286,46 +286,8 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			instance.add(instance.tfUrl = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
 			//
-			final Border defaultBorder = getBorder(instance.tfUrl);
-			//
-			final Border redBorder = BorderFactory.createLineBorder(Color.RED, 2);
-			//
-			addDocumentListener(getDocument(instance.tfUrl), new DocumentListener() {
-
-				@Override
-				public void insertUpdate(final DocumentEvent evt) {
-					validate();
-				}
-
-				@Override
-				public void removeUpdate(final DocumentEvent evt) {
-					validate();
-				}
-
-				@Override
-				public void changedUpdate(final DocumentEvent evt) {
-					validate();
-				}
-
-				private void validate() {
-					//
-					final JTextComponent jTextComponent = instance.tfUrl;
-					//
-					final String text = getText(jTextComponent);
-					//
-					if (StringUtils.isEmpty(text) || isValid(UrlValidator.getInstance(), text)) {
-						//
-						setBorder(jTextComponent, defaultBorder);
-						//
-					} else {
-						//
-						setBorder(jTextComponent, redBorder);
-						//
-					} // if
-						//
-				}
-
-			});
+			addDocumentListener(getDocument(instance.tfUrl), createDocumentListener(instance.tfUrl,
+					getBorder(instance.tfUrl), BorderFactory.createLineBorder(Color.RED, 2)));
 			//
 			instance.add(new JLabel());
 			//
@@ -438,6 +400,46 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 		} // try
 			//
+	}
+
+	private static DocumentListener createDocumentListener(final JTextComponent jTextComponent,
+			final Border borderDefault, final Border borderRed) {
+		//
+		return new DocumentListener() {
+
+			@Override
+			public void insertUpdate(final DocumentEvent evt) {
+				validate();
+			}
+
+			@Override
+			public void removeUpdate(final DocumentEvent evt) {
+				validate();
+			}
+
+			@Override
+			public void changedUpdate(final DocumentEvent evt) {
+				validate();
+			}
+
+			private void validate() {
+				//
+				final String text = getText(jTextComponent);
+				//
+				if (StringUtils.isEmpty(text) || isValid(UrlValidator.getInstance(), text)) {
+					//
+					setBorder(jTextComponent, borderDefault);
+					//
+				} else {
+					//
+					setBorder(jTextComponent, borderRed);
+					//
+				} // if
+					//
+			}
+
+		};
+		//
 	}
 
 	private static <K, V> Collection<Entry<K, V>> entrySet(final Map<K, V> instance) {

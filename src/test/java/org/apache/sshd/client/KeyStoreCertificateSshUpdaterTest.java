@@ -40,6 +40,7 @@ import javax.swing.AbstractButton;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JTextField;
+import javax.swing.border.Border;
 import javax.swing.text.JTextComponent;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -528,7 +529,9 @@ class KeyStoreCertificateSshUpdaterTest {
 							Arrays.equals(parameterTypes, new Class<?>[] { JTextComponent.class, Number.class }))
 					|| Boolean.logicalAnd(Objects.equals(name, "createKeyListener"), m.getParameterCount() == 0)
 					|| Boolean.logicalAnd(Objects.equals(name, "createKeyListener2"),
-							Arrays.equals(parameterTypes, new Class<?>[] { KeyStoreCertificateSshUpdater.class }))) {
+							Arrays.equals(parameterTypes, new Class<?>[] { KeyStoreCertificateSshUpdater.class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "createDocumentListener"), Arrays.equals(parameterTypes,
+							new Class<?>[] { JTextComponent.class, Border.class, Border.class }))) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
@@ -752,7 +755,9 @@ class KeyStoreCertificateSshUpdaterTest {
 					|| Boolean.logicalAnd(Objects.equals(name, "getDeclaredFields"),
 							Arrays.equals(parameterTypes, new Class<?>[] { Class.class }))
 					|| Boolean.logicalAnd(Objects.equals(name, "toMap"),
-							Arrays.equals(parameterTypes, new Class<?>[] { Object.class }))) {
+							Arrays.equals(parameterTypes, new Class<?>[] { Object.class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "createDocumentListener"), Arrays.equals(parameterTypes,
+							new Class<?>[] { JTextComponent.class, Border.class, Border.class }))) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
