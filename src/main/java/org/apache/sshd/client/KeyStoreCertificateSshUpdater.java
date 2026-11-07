@@ -18,12 +18,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -328,8 +330,6 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 				String value = null;
 				//
-				Field field = null;
-				//
 				for (final Entry<?, ?> entry : entrySet(properties)) {
 					//
 					if ((jtc = cast(JTextComponent.class,
@@ -343,16 +343,14 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 											x -> get(x, 0), null),
 									Narcissus::getField, null))) != null) {
 						//
-						if (Boolean
-								.logicalAnd(
-										Boolean.logicalAnd(isWindows(),
-												(field = testAndApply(x -> size(x) == 1, collect(
-														filter(stream(testAndApply(Objects::nonNull, getClass(instance),
-																FieldUtils::getAllFieldsList, null)),
-																f -> Objects.equals(getName(f), getKey(entry))),
-														Collectors.toList()), x -> get(x, 0), null)) != null
-														&& field.isAnnotationPresent(Password.class)),
-										StringUtils.isNotEmpty(value = Objects.toString(getValue(entry))))) {
+						if (Boolean.logicalAnd(
+								Boolean.logicalAnd(isWindows(), isAnnotationPresent(testAndApply(x -> size(x) == 1,
+										collect(filter(
+												stream(testAndApply(Objects::nonNull, getClass(instance),
+														FieldUtils::getAllFieldsList, null)),
+												f -> Objects.equals(getName(f), getKey(entry))), Collectors.toList()),
+										x -> get(x, 0), null), Password.class)),
+								StringUtils.isNotEmpty(value = Objects.toString(getValue(entry))))) {
 							//
 							try {
 								//
@@ -440,6 +438,11 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 		} // try
 			//
+	}
+
+	private static boolean isAnnotationPresent(final AnnotatedElement instance,
+			final Class<? extends Annotation> annotationClass) {
+		return instance != null && instance.isAnnotationPresent(annotationClass);
 	}
 
 	private static byte[] decode(final Decoder instance, final String string) {
@@ -2518,7 +2521,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 							cast(JTextComponent.class, testAndApply(KeyStoreCertificateSshUpdater::isStatic, f,
 									Narcissus::getStaticField, x -> Narcissus.getField(instance, x))));
 					//
-					if (isWindows() && f != null && f.isAnnotationPresent(Password.class)) {
+					if (isWindows() && isAnnotationPresent(f, Password.class)) {
 						//
 						value = encodeToString(Base64.getEncoder(), Crypt32Util.cryptProtectData(getBytes(value)));
 						//

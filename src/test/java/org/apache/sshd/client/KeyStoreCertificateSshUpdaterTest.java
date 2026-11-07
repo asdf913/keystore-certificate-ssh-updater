@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.management.RuntimeMXBean;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
@@ -117,7 +118,8 @@ class KeyStoreCertificateSshUpdaterTest {
 
 	private static class IH implements InvocationHandler {
 
-		private Boolean add, test, containsKey, isSuccess, hasMoreElements, isOpened, getAsBoolean = null;
+		private Boolean add, test, containsKey, isSuccess, hasMoreElements, isOpened, getAsBoolean,
+				isAnnotationPresent = null;
 
 		private Integer size, length, modifiers, applyAsInt = null;
 
@@ -162,21 +164,21 @@ class KeyStoreCertificateSshUpdaterTest {
 					//
 				} // if
 					//
-			} else if (proxy instanceof Member && Objects.equals(name, "getModifiers")) {
+			} else if (proxy instanceof Member) {
 				//
-				return modifiers;
-				//
-			} // if
-				//
-			if (proxy instanceof Member) {
-				//
-				if (Objects.equals(name, "getName")) {
+				if (Objects.equals(name, "getModifiers")) {
+					//
+					return modifiers;
+					//
+				} else if (proxy instanceof Member) {
 					//
 					return null;
 					//
 				} // if
 					//
-			} else if (proxy instanceof Map) {
+			} // if
+				//
+			if (proxy instanceof Map) {
 				//
 				if (contains(Arrays.asList("get", "put", "entrySet"), name)) {
 					//
@@ -402,6 +404,10 @@ class KeyStoreCertificateSshUpdaterTest {
 			} else if (proxy instanceof ToIntFunction && Objects.equals(name, "applyAsInt")) {
 				//
 				return applyAsInt;
+				//
+			} else if (proxy instanceof AnnotatedElement && Objects.equals(name, "isAnnotationPresent")) {
+				//
+				return isAnnotationPresent;
 				//
 			} // if
 				//
