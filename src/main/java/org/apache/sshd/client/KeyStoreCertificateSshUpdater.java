@@ -349,27 +349,22 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 			} // try
 				//
-			Field field = null;
-			//
 			JTextComponent jtc = null;
 			//
 			if (entrySet(properties) != null) {
 				//
 				for (final Entry<?, ?> entry : entrySet(properties)) {
 					//
-					if ((field = testAndApply(x -> size(x) == 1,
-							collect(filter(
-									stream(testAndApply(Objects::nonNull, getClass(instance),
-											FieldUtils::getAllFieldsList, null)),
-									f -> Objects.equals(getName(f), Objects.toString(getKey(entry)))),
-									Collectors.toList()),
-							x -> get(x, 0), null)) == null) {
-						//
-						continue;
-						//
-					} // if
-						//
-					if ((jtc = cast(JTextComponent.class, Narcissus.getField(instance, field))) != null) {
+					if ((jtc = cast(JTextComponent.class,
+							testAndApply((a, b) -> a != null && b != null, instance,
+									testAndApply(x -> size(x) == 1,
+											collect(filter(
+													stream(testAndApply(Objects::nonNull, getClass(instance),
+															FieldUtils::getAllFieldsList, null)),
+													f -> Objects.equals(getName(f), Objects.toString(getKey(entry)))),
+													Collectors.toList()),
+											x -> get(x, 0), null),
+									Narcissus::getField, null))) != null) {
 						//
 						jtc.setText(Objects.toString(getValue(entry)));
 						//
