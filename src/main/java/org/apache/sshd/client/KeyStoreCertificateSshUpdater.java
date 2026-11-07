@@ -180,6 +180,8 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 
 	private static final String SHA1 = "SHA-1";
 
+	private static final String OBJECT_LOCK = "objectLock";
+
 	@Target(ElementType.FIELD)
 	@Retention(RetentionPolicy.RUNTIME)
 	private @interface Note {
@@ -448,7 +450,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 		final Field field = testAndApply(x -> size(x) == 1,
 				collect(filter(
 						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
-						f -> Objects.equals(getName(f), "objectLock")), Collectors.toList()),
+						f -> Objects.equals(getName(f), OBJECT_LOCK)), Collectors.toList()),
 				x -> get(x, 0), null);
 		//
 		if (field == null || Narcissus.getField(instance, field) != null) {
@@ -666,7 +668,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 		final Field field = testAndApply(x -> size(x) == 1,
 				collect(filter(FieldUtils.getAllFieldsList(getClass(instance)).stream(),
-						f -> Objects.equals(getName(f), "objectLock")), Collectors.toList()),
+						f -> Objects.equals(getName(f), OBJECT_LOCK)), Collectors.toList()),
 				x -> get(x, 0), null);
 		//
 		if (field == null || Narcissus.getField(instance, field) != null) {
@@ -693,7 +695,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 		final Field field = testAndApply(x -> size(x) == 1,
 				collect(filter(FieldUtils.getAllFieldsList(getClass(instance)).stream(),
-						f -> Objects.equals(getName(f), "objectLock")), Collectors.toList()),
+						f -> Objects.equals(getName(f), OBJECT_LOCK)), Collectors.toList()),
 				x -> get(x, 0), null);
 		//
 		if (field == null || Narcissus.getField(instance, field) != null) {
