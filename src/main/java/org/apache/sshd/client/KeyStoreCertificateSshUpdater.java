@@ -356,7 +356,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				for (final Entry<?, ?> entry : entrySet(properties)) {
 					//
 					if ((jtc = cast(JTextComponent.class,
-							testAndApply((a, b) -> a != null && b != null, instance,
+							testAndApply((a, b) -> Boolean.logicalAnd(a != null, b != null), instance,
 									testAndApply(x -> size(x) == 1,
 											collect(filter(
 													stream(testAndApply(Objects::nonNull, getClass(instance),
