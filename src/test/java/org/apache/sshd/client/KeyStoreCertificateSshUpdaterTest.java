@@ -38,6 +38,7 @@ import java.util.stream.Stream;
 import javax.net.ssl.HttpsURLConnection;
 import javax.swing.AbstractButton;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JTextField;
 import javax.swing.text.JTextComponent;
 import javax.xml.parsers.DocumentBuilder;
@@ -650,7 +651,8 @@ class KeyStoreCertificateSshUpdaterTest {
 					add(collection, Narcissus.allocateInstance(getClass(Duration.ofSeconds(0))));
 					//
 				} else if (Objects.equals(parameterType, JTextComponent.class)
-						|| Objects.equals(parameterType, Component.class)) {
+						|| Objects.equals(parameterType, Component.class)
+						|| Objects.equals(parameterType, JComponent.class)) {
 					//
 					add(collection, Narcissus.allocateInstance(JTextField.class));
 					//

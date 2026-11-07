@@ -1,5 +1,6 @@
 package org.apache.sshd.client;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.GraphicsEnvironment;
@@ -78,7 +79,9 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.security.auth.x500.X500Principal;
 import javax.swing.AbstractButton;
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -86,6 +89,9 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
+import javax.swing.border.Border;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.JTextComponent;
@@ -258,6 +264,47 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			instance.add(instance.tfUrl = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
 			//
+			final Border defaultBorder = getBorder(instance.tfUrl);
+			//
+			final Border redBorder = BorderFactory.createLineBorder(Color.RED, 2);
+			//
+			addDocumentListener(getDocument(instance.tfUrl), new DocumentListener() {
+
+				@Override
+				public void insertUpdate(final DocumentEvent evt) {
+					validate();
+				}
+
+				@Override
+				public void removeUpdate(final DocumentEvent evt) {
+					validate();
+				}
+
+				@Override
+				public void changedUpdate(final DocumentEvent evt) {
+					validate();
+				}
+
+				private void validate() {
+					//
+					final JTextComponent jTextComponent = instance.tfUrl;
+					//
+					final String text = getText(jTextComponent);
+					//
+					if (StringUtils.isEmpty(text) || isValid(UrlValidator.getInstance(), text)) {
+						//
+						setBorder(jTextComponent, defaultBorder);
+						//
+					} else {
+						//
+						setBorder(jTextComponent, redBorder);
+						//
+					} // if
+						//
+				}
+
+			});
+			//
 			instance.add(new JLabel());
 			//
 			instance.add(instance.btnExecute = new JButton("Execute"), wrap);
@@ -375,6 +422,43 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 		} // try
 			//
+	}
+
+	private static void addDocumentListener(final javax.swing.text.Document instance,
+			final DocumentListener documentListener) {
+		if (instance != null) {
+			instance.addDocumentListener(documentListener);
+		}
+	}
+
+	private static javax.swing.text.Document getDocument(final JTextComponent instance) {
+		return instance != null ? instance.getDocument() : null;
+	}
+
+	private static void setBorder(final JComponent instance, final Border border) {
+		//
+		if (instance == null) {
+			//
+			return;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "objectLock")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		if (field == null || Narcissus.getField(instance, field) != null) {
+			//
+			instance.setBorder(border);
+			//
+		} // if
+			//
+	}
+
+	private static Border getBorder(final JTextComponent instance) {
+		return instance != null ? instance.getBorder() : null;
 	}
 
 	private static KeyListener createKeyListener() {
