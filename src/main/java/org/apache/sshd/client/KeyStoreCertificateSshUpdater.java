@@ -336,8 +336,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 						//
 						value = Objects.toString(getValue(entry));
 						//
-						if (Objects.equals(getName(getClass(FileSystems.getDefault())), "sun.nio.fs.WindowsFileSystem")
-								&& Strings.CI.contains(Objects.toString(getKey(entry)), "password")
+						if (isWindows() && Strings.CI.contains(Objects.toString(getKey(entry)), "password")
 								&& StringUtils.isNotEmpty(value)) {
 							//
 							try {
@@ -1028,15 +1027,13 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 
 	private static boolean isGui() {
 		//
-		final String name = getName(getClass(FileSystems.getDefault()));
-		//
-		if (Objects.equals(name, "sun.nio.fs.MacOSXFileSystem")) {
+		if (Objects.equals(getName(getClass(FileSystems.getDefault())), "sun.nio.fs.MacOSXFileSystem")) {
 			//
 			return System.console() == null;
 			//
 		} // if
 			//
-		if (Objects.equals(name, "sun.nio.fs.WindowsFileSystem")) {
+		if (isWindows()) {
 			//
 			final Matcher matcher = matcher(Pattern.compile("\\d+"), getName(ManagementFactory.getRuntimeMXBean()));
 			//
@@ -1052,6 +1049,10 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 		return false;
 		//
+	}
+
+	private static boolean isWindows() {
+		return Objects.equals(getName(getClass(FileSystems.getDefault())), "sun.nio.fs.WindowsFileSystem");
 	}
 
 	private static boolean endsWith(final String instance, final String suffix) {
@@ -2502,8 +2503,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 							cast(JTextComponent.class, testAndApply(KeyStoreCertificateSshUpdater::isStatic, f,
 									Narcissus::getStaticField, x -> Narcissus.getField(instance, x))));
 					//
-					if (Objects.equals(getName(getClass(FileSystems.getDefault())), "sun.nio.fs.WindowsFileSystem")
-							&& Strings.CI.contains(getName(f), "password")) {
+					if (isWindows() && Strings.CI.contains(getName(f), "password")) {
 						//
 						value = encodeToString(Base64.getEncoder(), Crypt32Util.cryptProtectData(getBytes(value)));
 						//
