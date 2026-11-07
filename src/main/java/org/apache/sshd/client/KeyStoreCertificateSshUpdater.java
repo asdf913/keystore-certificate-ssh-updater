@@ -203,7 +203,10 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 	@Note("Public Key")
 	private JTextComponent tfPublicKey = null;
 
-	private JTextComponent tfKeyTool, tfKeyStorePath, tfKeyStorePassword, tfUrl = null;
+	@Note("Key Tool")
+	private JTextComponent tfKeyTool = null;
+
+	private JTextComponent tfKeyStorePath, tfKeyStorePassword, tfUrl = null;
 
 	@Note("Public Key")
 	private AbstractButton btnPublicKey = null;
