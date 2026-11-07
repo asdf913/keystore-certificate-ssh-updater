@@ -257,7 +257,9 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			final String growx = "growx";
 			//
-			instance.add(instance.tfPort = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
+			final String format = "%1$s,%2$s";
+			//
+			instance.add(instance.tfPort = new JTextField(), String.format(format, growx, wrap));
 			//
 			setDocument(instance.tfPort, createDocument(instance.tfPort, Collections.max(getPorts())));
 			//
@@ -265,11 +267,11 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			instance.add(new JLabel("User"));
 			//
-			instance.add(instance.tfUsername = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
+			instance.add(instance.tfUsername = new JTextField(), String.format(format, growx, wrap));
 			//
 			instance.add(new JLabel("Password"));
 			//
-			instance.add(instance.tfPassword = new JPasswordField(), String.format("%1$s,%2$s", growx, wrap));
+			instance.add(instance.tfPassword = new JPasswordField(), String.format(format, growx, wrap));
 			//
 			instance.add(new JLabel("Public Key"));
 			//
@@ -281,19 +283,19 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			instance.add(new JLabel("Key Tool"));
 			//
-			instance.add(instance.tfKeyTool = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
+			instance.add(instance.tfKeyTool = new JTextField(), String.format(format, growx, wrap));
 			//
 			instance.add(new JLabel("Key Store Path"));
 			//
-			instance.add(instance.tfKeyStorePath = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
+			instance.add(instance.tfKeyStorePath = new JTextField(), String.format(format, growx, wrap));
 			//
 			instance.add(new JLabel("Key Store Password"));
 			//
-			instance.add(instance.tfKeyStorePassword = new JPasswordField(), String.format("%1$s,%2$s", growx, wrap));
+			instance.add(instance.tfKeyStorePassword = new JPasswordField(), String.format(format, growx, wrap));
 			//
 			instance.add(new JLabel("URL"));
 			//
-			instance.add(instance.tfUrl = new JTextField(), String.format("%1$s,%2$s", growx, wrap));
+			instance.add(instance.tfUrl = new JTextField(), String.format(format, growx, wrap));
 			//
 			addDocumentListener(getDocument(instance.tfUrl), createDocumentListener(instance.tfUrl,
 					getBorder(instance.tfUrl), BorderFactory.createLineBorder(Color.RED, 2)));
