@@ -2441,16 +2441,16 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 
 	private static Map<String, String> toMap(final Object instance) {
 		//
-		final Stream<Field> stream = testAndApply(Objects::nonNull, getDeclaredFields(getClass(instance)),
+		final Stream<Field> stream1 = testAndApply(Objects::nonNull, getDeclaredFields(getClass(instance)),
 				Arrays::stream, null);
 		//
-		return collect(
-				map(filter(stream, f -> isAssignableFrom(JTextComponent.class, getType(f))),
-						f -> Pair.of(getName(f),
-								getText(cast(JTextComponent.class,
-										testAndApply(KeyStoreCertificateSshUpdater::isStatic, f,
-												Narcissus::getStaticField, x -> Narcissus.getField(instance, x)))))),
-				LinkedHashMap::new, (a, b) -> put(a, getKey(b), getValue(b)), Map::putAll);
+		final Stream<Entry<String, String>> stream2 = map(
+				filter(stream1, f -> isAssignableFrom(JTextComponent.class, getType(f))),
+				f -> Pair.of(getName(f),
+						getText(cast(JTextComponent.class, testAndApply(KeyStoreCertificateSshUpdater::isStatic, f,
+								Narcissus::getStaticField, x -> Narcissus.getField(instance, x))))));
+		//
+		return collect(stream2, LinkedHashMap::new, (a, b) -> put(a, getKey(b), getValue(b)), Map::putAll);
 		//
 	}
 
