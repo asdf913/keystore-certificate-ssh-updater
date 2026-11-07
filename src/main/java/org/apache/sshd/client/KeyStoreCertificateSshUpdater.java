@@ -390,63 +390,61 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 
 	private static void setText(final Object instance, final Map<?, ?> map) {
 		//
+		if (entrySet(map) == null || entrySet(map).iterator() == null) {
+			//
+			return;
+			//
+		} // if
+			//
 		JTextComponent jtc = null;
 		//
-		if (entrySet(map) != null) {
+		String value = null;
+		//
+		for (final Entry<?, ?> entry : entrySet(map)) {
 			//
-			String value = null;
-			//
-			for (final Entry<?, ?> entry : entrySet(map)) {
+			if ((jtc = cast(JTextComponent.class,
+					testAndApply((a, b) -> Boolean.logicalAnd(a != null, b != null), instance,
+							testAndApply(x -> size(x) == 1,
+									collect(filter(
+											stream(testAndApply(Objects::nonNull, getClass(instance),
+													FieldUtils::getAllFieldsList, null)),
+											f -> Objects.equals(getName(f), Objects.toString(getKey(entry)))),
+											Collectors.toList()),
+									x -> get(x, 0), null),
+							Narcissus::getField, null))) != null) {
 				//
-				if ((jtc = cast(JTextComponent.class,
-						testAndApply((a, b) -> Boolean.logicalAnd(a != null, b != null), instance,
-								testAndApply(x -> size(x) == 1,
+				if (Boolean.logicalAnd(
+						Boolean.logicalAnd(isWindows(),
+								isAnnotationPresent(testAndApply(x -> size(x) == 1,
 										collect(filter(
 												stream(testAndApply(Objects::nonNull, getClass(instance),
 														FieldUtils::getAllFieldsList, null)),
-												f -> Objects.equals(getName(f), Objects.toString(getKey(entry)))),
-												Collectors.toList()),
-										x -> get(x, 0), null),
-								Narcissus::getField, null))) != null) {
+												f -> Objects.equals(getName(f), getKey(entry))), Collectors.toList()),
+										x -> get(x, 0), null), Password.class)),
+						StringUtils.isNotEmpty(value = Objects.toString(getValue(entry))))) {
 					//
-					if (Boolean.logicalAnd(
-							Boolean.logicalAnd(isWindows(),
-									isAnnotationPresent(
-											testAndApply(x -> size(x) == 1,
-													collect(filter(
-															stream(testAndApply(Objects::nonNull, getClass(instance),
-																	FieldUtils::getAllFieldsList, null)),
-															f -> Objects.equals(getName(f), getKey(entry))),
-															Collectors.toList()),
-													x -> get(x, 0), null),
-											Password.class)),
-							StringUtils.isNotEmpty(value = Objects.toString(getValue(entry))))) {
+					try {
 						//
-						try {
-							//
-							value = testAndApply(Objects::nonNull,
-									Crypt32Util.cryptUnprotectData(decode(Base64.getDecoder(), value)), String::new,
-									null);
-							//
-						} catch (final Win32Exception e) {
-							//
-							continue;
-							//
-						} // try
-							//
-					} // if
+						value = testAndApply(Objects::nonNull,
+								Crypt32Util.cryptUnprotectData(decode(Base64.getDecoder(), value)), String::new, null);
 						//
-					jtc.setText(value);
-					//
-				} else {
-					//
-					throw new RuntimeException();
-					//
+					} catch (final Win32Exception e) {
+						//
+						continue;
+						//
+					} // try
+						//
 				} // if
 					//
-			} // for
+				jtc.setText(value);
 				//
-		} // if
+			} else {
+				//
+				throw new RuntimeException();
+				//
+			} // if
+				//
+		} // for
 			//
 	}
 
