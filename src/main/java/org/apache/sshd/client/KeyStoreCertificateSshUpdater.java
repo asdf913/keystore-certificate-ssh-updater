@@ -324,60 +324,8 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 			} // try
 				//
-			JTextComponent jtc = null;
+			setText(instance, properties);
 			//
-			if (entrySet(properties) != null) {
-				//
-				String value = null;
-				//
-				for (final Entry<?, ?> entry : entrySet(properties)) {
-					//
-					if ((jtc = cast(JTextComponent.class,
-							testAndApply((a, b) -> Boolean.logicalAnd(a != null, b != null), instance,
-									testAndApply(x -> size(x) == 1,
-											collect(filter(
-													stream(testAndApply(Objects::nonNull, getClass(instance),
-															FieldUtils::getAllFieldsList, null)),
-													f -> Objects.equals(getName(f), Objects.toString(getKey(entry)))),
-													Collectors.toList()),
-											x -> get(x, 0), null),
-									Narcissus::getField, null))) != null) {
-						//
-						if (Boolean.logicalAnd(
-								Boolean.logicalAnd(isWindows(), isAnnotationPresent(testAndApply(x -> size(x) == 1,
-										collect(filter(
-												stream(testAndApply(Objects::nonNull, getClass(instance),
-														FieldUtils::getAllFieldsList, null)),
-												f -> Objects.equals(getName(f), getKey(entry))), Collectors.toList()),
-										x -> get(x, 0), null), Password.class)),
-								StringUtils.isNotEmpty(value = Objects.toString(getValue(entry))))) {
-							//
-							try {
-								//
-								value = testAndApply(Objects::nonNull,
-										Crypt32Util.cryptUnprotectData(decode(Base64.getDecoder(), value)), String::new,
-										null);
-								//
-							} catch (final Win32Exception e) {
-								//
-								continue;
-								//
-							} // try
-								//
-						} // if
-							//
-						jtc.setText(value);
-						//
-					} else {
-						//
-						throw new RuntimeException();
-						//
-					} // if
-						//
-				} // for
-					//
-			} // if
-				//
 			final KeyListener keyListener = createKeyListener2(instance);
 			//
 			forEach(map(filter(get(supplier), f -> isAssignableFrom(JTextComponent.class, getType(f))),
@@ -437,6 +385,68 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			} // if
 				//
 		} // try
+			//
+	}
+
+	private static void setText(final Object instance, final Map<?, ?> map) {
+		//
+		JTextComponent jtc = null;
+		//
+		if (entrySet(map) != null) {
+			//
+			String value = null;
+			//
+			for (final Entry<?, ?> entry : entrySet(map)) {
+				//
+				if ((jtc = cast(JTextComponent.class,
+						testAndApply((a, b) -> Boolean.logicalAnd(a != null, b != null), instance,
+								testAndApply(x -> size(x) == 1,
+										collect(filter(
+												stream(testAndApply(Objects::nonNull, getClass(instance),
+														FieldUtils::getAllFieldsList, null)),
+												f -> Objects.equals(getName(f), Objects.toString(getKey(entry)))),
+												Collectors.toList()),
+										x -> get(x, 0), null),
+								Narcissus::getField, null))) != null) {
+					//
+					if (Boolean.logicalAnd(
+							Boolean.logicalAnd(isWindows(),
+									isAnnotationPresent(
+											testAndApply(x -> size(x) == 1,
+													collect(filter(
+															stream(testAndApply(Objects::nonNull, getClass(instance),
+																	FieldUtils::getAllFieldsList, null)),
+															f -> Objects.equals(getName(f), getKey(entry))),
+															Collectors.toList()),
+													x -> get(x, 0), null),
+											Password.class)),
+							StringUtils.isNotEmpty(value = Objects.toString(getValue(entry))))) {
+						//
+						try {
+							//
+							value = testAndApply(Objects::nonNull,
+									Crypt32Util.cryptUnprotectData(decode(Base64.getDecoder(), value)), String::new,
+									null);
+							//
+						} catch (final Win32Exception e) {
+							//
+							continue;
+							//
+						} // try
+							//
+					} // if
+						//
+					jtc.setText(value);
+					//
+				} else {
+					//
+					throw new RuntimeException();
+					//
+				} // if
+					//
+			} // for
+				//
+		} // if
 			//
 	}
 
