@@ -52,6 +52,8 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Base64.Decoder;
+import java.util.Base64.Encoder;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -162,6 +164,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import com.google.common.net.HostAndPort;
+import com.sun.jna.platform.win32.Crypt32Util;
 import com.sun.jna.platform.win32.Kernel32Util;
 
 import io.github.toolfactory.narcissus.Narcissus;
@@ -315,6 +318,8 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			if (entrySet(properties) != null) {
 				//
+				String value = null;
+				//
 				for (final Entry<?, ?> entry : entrySet(properties)) {
 					//
 					if ((jtc = cast(JTextComponent.class,
@@ -328,7 +333,19 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 											x -> get(x, 0), null),
 									Narcissus::getField, null))) != null) {
 						//
-						jtc.setText(Objects.toString(getValue(entry)));
+						value = Objects.toString(getValue(entry));
+						//
+						if (Objects.equals(getName(getClass(FileSystems.getDefault())), "sun.nio.fs.WindowsFileSystem")
+								&& Strings.CI.contains(Objects.toString(getKey(entry)), "password")
+								&& StringUtils.isNotEmpty(value)) {
+							//
+							value = testAndApply(Objects::nonNull,
+									Crypt32Util.cryptUnprotectData(decode(Base64.getDecoder(), value)), String::new,
+									null);
+							//
+						} // if
+							//
+						jtc.setText(value);
 						//
 					} else {
 						//
@@ -400,6 +417,24 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 		} // try
 			//
+	}
+
+	private static byte[] decode(final Decoder instance, final String string) {
+		//
+		if (instance == null || string == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(string), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), VALUE)), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return field == null || Narcissus.getField(string, field) != null ? instance.decode(string) : null;
+		//
 	}
 
 	private static DocumentListener createDocumentListener(final JTextComponent jTextComponent,
@@ -2419,7 +2454,8 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 		} // if
 			//
-		try (final OutputStream os = testAndApply(Objects::nonNull, file, FileOutputStream::new, null)) {
+		try (final OutputStream os = testAndApply(x -> x != null && x.getPath() != null, file, FileOutputStream::new,
+				null)) {
 			//
 			final Properties properties = new Properties();
 			//
@@ -2451,12 +2487,46 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				Arrays::stream, null);
 		//
 		final Stream<Entry<String, String>> stream2 = map(
-				filter(stream1, f -> isAssignableFrom(JTextComponent.class, getType(f))),
-				f -> Pair.of(getName(f),
-						getText(cast(JTextComponent.class, testAndApply(KeyStoreCertificateSshUpdater::isStatic, f,
-								Narcissus::getStaticField, x -> Narcissus.getField(instance, x))))));
+				filter(stream1, f -> isAssignableFrom(JTextComponent.class, getType(f))), f -> {
+					//
+					String value = getText(
+							cast(JTextComponent.class, testAndApply(KeyStoreCertificateSshUpdater::isStatic, f,
+									Narcissus::getStaticField, x -> Narcissus.getField(instance, x))));
+					//
+					if (Objects.equals(getName(getClass(FileSystems.getDefault())), "sun.nio.fs.WindowsFileSystem")
+							&& Strings.CI.contains(getName(f), "password")) {
+						//
+						value = encodeToString(Base64.getEncoder(), Crypt32Util.cryptProtectData(getBytes(value)));
+						//
+					} // if
+						//
+					return Pair.of(getName(f), value);
+					//
+				});
 		//
 		return collect(stream2, LinkedHashMap::new, (a, b) -> put(a, getKey(b), getValue(b)), Map::putAll);
+		//
+	}
+
+	private static String encodeToString(final Encoder instance, final byte[] bs) {
+		return instance != null ? instance.encodeToString(bs) : null;
+	}
+
+	private static byte[] getBytes(final String instance) {
+		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), VALUE)), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return field == null || Narcissus.getField(instance, field) != null ? instance.getBytes() : null;
 		//
 	}
 

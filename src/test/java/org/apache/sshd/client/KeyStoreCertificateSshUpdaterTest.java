@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Base64.Encoder;
 import java.util.function.BiPredicate;
 import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
@@ -756,8 +757,11 @@ class KeyStoreCertificateSshUpdaterTest {
 							Arrays.equals(parameterTypes, new Class<?>[] { Class.class }))
 					|| Boolean.logicalAnd(Objects.equals(name, "toMap"),
 							Arrays.equals(parameterTypes, new Class<?>[] { Object.class }))
-					|| Boolean.logicalAnd(Objects.equals(name, "createDocumentListener"), Arrays.equals(parameterTypes,
-							new Class<?>[] { JTextComponent.class, Border.class, Border.class }))) {
+					|| Boolean.logicalAnd(Objects.equals(name, "createDocumentListener"),
+							Arrays.equals(parameterTypes,
+									new Class<?>[] { JTextComponent.class, Border.class, Border.class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "encodeToString"),
+							Arrays.equals(parameterTypes, new Class<?>[] { Encoder.class, byte[].class }))) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
