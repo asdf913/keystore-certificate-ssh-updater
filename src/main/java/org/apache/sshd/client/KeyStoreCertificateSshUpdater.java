@@ -6,6 +6,7 @@ import java.awt.Container;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -663,7 +664,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 						Collectors.toMap(KeyStoreCertificateSshUpdater::getKey,
 								KeyStoreCertificateSshUpdater::getValue));
 				//
-				if (((evt.getModifiersEx() & KeyEvent.CTRL_DOWN_MASK) != 0 && evt.getKeyCode() == KeyEvent.VK_X)
+				if (((evt.getModifiersEx() & InputEvent.CTRL_DOWN_MASK) != 0 && evt.getKeyCode() == KeyEvent.VK_X)
 						&& (instance.map == null || !Objects.equals(instance.map, m))) {
 					//
 					instance.map = m;
