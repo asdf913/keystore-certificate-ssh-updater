@@ -12,6 +12,7 @@ import java.awt.event.KeyListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,6 +62,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Properties;
+import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -164,7 +167,7 @@ import com.sun.jna.platform.win32.Kernel32Util;
 import io.github.toolfactory.narcissus.Narcissus;
 import net.miginfocom.swing.MigLayout;
 
-public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListener {
+public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListener, DocumentListener {
 
 	private static final long serialVersionUID = -7414566256715350073L;
 
@@ -218,6 +221,8 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 	private AbstractButton btnPublicKey = null;
 
 	private AbstractButton btnExecute = null;
+
+	private Map<String, String> map = null;
 
 	public static void main(final String[] args) throws Exception {
 		//
@@ -326,13 +331,69 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			instance.add(instance.btnExecute = new JButton("Execute"), wrap);
 			//
-			final Stream<Field> stream = testAndApply(Objects::nonNull,
-					KeyStoreCertificateSshUpdater.class.getDeclaredFields(), Arrays::stream, null);
+			final Supplier<Stream<Field>> supplier = () -> testAndApply(Objects::nonNull,
+					getDeclaredFields(KeyStoreCertificateSshUpdater.class), Arrays::stream, null);
 			//
-			forEach(map(filter(stream, f -> isAssignableFrom(AbstractButton.class, getType(f))),
+			forEach(map(filter(get(supplier), f -> isAssignableFrom(AbstractButton.class, getType(f))),
 					f -> cast(AbstractButton.class, testAndApply(KeyStoreCertificateSshUpdater::isStatic, f,
 							Narcissus::getStaticField, x -> Narcissus.getField(instance, x)))),
 					x -> addActionListener(x, instance));
+			//
+			final Properties properties = new Properties();
+			//
+			try (final InputStream is = testAndApply(x -> exists(x) && isFile(x),
+					new File("KeyStoreCertificateSshUpdater.properties"), FileInputStream::new, null)) {
+				//
+				testAndAccept(Objects::nonNull, is, properties::load);
+				//
+			} // try
+				//
+			Field field = null;
+			//
+			JTextComponent jtc = null;
+			//
+			if (entrySet(properties) != null) {
+				//
+				for (final Entry<?, ?> entry : entrySet(properties)) {
+					//
+					if ((field = testAndApply(x -> size(x) == 1,
+							collect(filter(
+									stream(testAndApply(Objects::nonNull, getClass(instance),
+											FieldUtils::getAllFieldsList, null)),
+									f -> Objects.equals(getName(f), Objects.toString(getKey(entry)))),
+									Collectors.toList()),
+							x -> get(x, 0), null)) == null) {
+						//
+						continue;
+						//
+					} // if
+						//
+					if ((jtc = cast(JTextComponent.class, Narcissus.getField(instance, field))) != null) {
+						//
+						jtc.setText(Objects.toString(getValue(entry)));
+						//
+					} else {
+						//
+						throw new RuntimeException();
+						//
+					} // if
+						//
+				} // if
+					//
+			} // if
+				//
+			final KeyListener keyListener = createKeyListener2(instance);
+			//
+			forEach(map(filter(get(supplier), f -> isAssignableFrom(JTextComponent.class, getType(f))),
+					f -> cast(JTextComponent.class, testAndApply(KeyStoreCertificateSshUpdater::isStatic, f,
+							Narcissus::getStaticField, x -> Narcissus.getField(instance, x)))),
+					x -> {
+						//
+						addDocumentListener(getDocument(x), instance);
+						//
+						addKeyListener(x, keyListener);
+						//
+					});
 			//
 			final JFrame jFrame = getAsBooleanAndGet(() -> !GraphicsEnvironment.isHeadless(), JFrame::new);
 			//
@@ -381,6 +442,10 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 		} // try
 			//
+	}
+
+	private static <K, V> Collection<Entry<K, V>> entrySet(final Map<K, V> instance) {
+		return instance != null ? instance.entrySet() : null;
 	}
 
 	private static void perform(final SshClient sshClient, final Document document, final String url,
@@ -498,6 +563,44 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				if (!((c >= '0') && (c <= '9') || (c == KeyEvent.VK_BACK_SPACE) || (c == KeyEvent.VK_DELETE))) {
 					//
 					evt.consume();
+					//
+				} // if
+					//
+			}
+
+		};
+		//
+	}
+
+	private static KeyListener createKeyListener2(final KeyStoreCertificateSshUpdater instance) {
+		//
+		return new KeyAdapter() {
+
+			@Override
+			public void keyPressed(final KeyEvent evt) {
+				//
+				if (evt == null || instance == null) {
+					//
+					return;
+					//
+				} // if
+					//
+				final Stream<Field> stream = testAndApply(Objects::nonNull,
+						getDeclaredFields(KeyStoreCertificateSshUpdater.class), Arrays::stream, null);
+				//
+				final Map<String, String> map = map(
+						filter(stream, f -> isAssignableFrom(JTextComponent.class, getType(f))),
+						f -> Pair.of(getName(f),
+								getText(cast(JTextComponent.class,
+										testAndApply(KeyStoreCertificateSshUpdater::isStatic, f,
+												Narcissus::getStaticField, x -> Narcissus.getField(instance, x))))))
+						.collect(Collectors.toMap(KeyStoreCertificateSshUpdater::getKey,
+								KeyStoreCertificateSshUpdater::getValue));
+				//
+				if (((evt.getModifiersEx() & KeyEvent.CTRL_DOWN_MASK) != 0 && evt.getKeyCode() == KeyEvent.VK_X)
+						&& (instance.map == null || !Objects.equals(instance.map, map))) {
+					//
+					instance.map = map;
 					//
 				} // if
 					//
@@ -750,7 +853,11 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 	}
 
 	private static <T> T getAsBooleanAndGet(final BooleanSupplier booleanSupplier, final Supplier<T> supplier) {
-		return booleanSupplier != null && booleanSupplier.getAsBoolean() && supplier != null ? supplier.get() : null;
+		return booleanSupplier != null && booleanSupplier.getAsBoolean() ? get(supplier) : null;
+	}
+
+	private static <T> T get(final Supplier<T> instance) {
+		return instance != null ? instance.get() : null;
 	}
 
 	private static File createTempFile(final String prefix, final String suffix) {
@@ -2257,6 +2364,13 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 		//
 	}
 
+	private static <T, R, A> R collect(final Stream<T> instance, final Supplier<R> supplier,
+			final BiConsumer<R, ? super T> accumulator, final BiConsumer<R, R> combiner) {
+		//
+		return instance != null ? instance.collect(supplier, accumulator, combiner) : null;
+		//
+	}
+
 	private static <T> Stream<T> filter(final Stream<T> instance, final Predicate<? super T> predicate) {
 		return instance != null ? instance.filter(predicate) : instance;
 	}
@@ -2285,6 +2399,92 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 
 	private static int length(final Object[] instance) {
 		return instance != null ? instance.length : 0;
+	}
+
+	@Override
+	public void changedUpdate(final DocumentEvent evt) {
+		//
+		final Map<String, String> map = toMap(this);
+		//
+		if (!isTestMode() && (this.map == null || !Objects.equals(this.map, map))) {
+			//
+			write(new File("KeyStoreCertificateSshUpdater.properties"), map);
+			//
+		} // if
+			//
+	}
+
+	private static void write(final File file, final Map<?, ?> map) {
+		//
+		try (final OutputStream os = testAndApply(x -> exists(x) && isFile(x), file, FileOutputStream::new, null)) {
+			//
+			final Properties properties = new Properties();
+			//
+			forEach(stream(entrySet(map)), x -> {
+				//
+				final Object value = getValue(x);
+				//
+				if (value != null) {
+					//
+					put(properties, getKey(x), value);
+					//
+				} // if
+					//
+			});
+			//
+			testAndAccept(Objects::nonNull, os, x -> properties.store(x, null));
+			//
+		} catch (final IOException e) {
+			//
+			error(LOG, getMessage(e), e);
+			//
+		} // try
+			//
+	}
+
+	private static Map<String, String> toMap(final Object instance) {
+		//
+		final Stream<Field> stream = testAndApply(Objects::nonNull, getDeclaredFields(getClass(instance)),
+				Arrays::stream, null);
+		//
+		return collect(
+				map(filter(stream, f -> isAssignableFrom(JTextComponent.class, getType(f))),
+						f -> Pair.of(getName(f),
+								getText(cast(JTextComponent.class,
+										testAndApply(KeyStoreCertificateSshUpdater::isStatic, f,
+												Narcissus::getStaticField, x -> Narcissus.getField(instance, x)))))),
+				LinkedHashMap::new, (a, b) -> put(a, getKey(b), getValue(b)), Map::putAll);
+		//
+	}
+
+	private static Field[] getDeclaredFields(final Class<?> instance) {
+		return instance != null ? instance.getDeclaredFields() : null;
+	}
+
+	@Override
+	public void insertUpdate(final DocumentEvent evt) {
+		//
+		final Map<String, String> map = toMap(this);
+		//
+		if (!isTestMode() && (this.map == null || !Objects.equals(this.map, map))) {
+			//
+			write(new File("KeyStoreCertificateSshUpdater.properties"), map);
+			//
+		} // if
+			//
+	}
+
+	@Override
+	public void removeUpdate(final DocumentEvent evt) {
+		//
+		final Map<String, String> map = toMap(this);
+		//
+		if (!isTestMode() && (this.map == null || !Objects.equals(this.map, map))) {
+			//
+			write(new File("KeyStoreCertificateSshUpdater.properties"), map);
+			//
+		} // if
+			//
 	}
 
 }

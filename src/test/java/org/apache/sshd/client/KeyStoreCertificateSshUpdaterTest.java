@@ -176,11 +176,7 @@ class KeyStoreCertificateSshUpdaterTest {
 					//
 			} else if (proxy instanceof Map) {
 				//
-				if (Objects.equals(name, "get")) {
-					//
-					return null;
-					//
-				} else if (Objects.equals(name, "put")) {
+				if (contains(Arrays.asList("get", "put", "entrySet"), name)) {
 					//
 					return null;
 					//
@@ -190,7 +186,9 @@ class KeyStoreCertificateSshUpdaterTest {
 					//
 				} // if
 					//
-			} else if (proxy instanceof List) {
+			} else if (proxy instanceof List)
+
+			{
 				//
 				if (Objects.equals(name, "get")) {
 					//
@@ -528,7 +526,9 @@ class KeyStoreCertificateSshUpdaterTest {
 					|| Boolean.logicalAnd(Objects.equals(name = getName(m), "getPorts"), m.getParameterCount() == 0)
 					|| Boolean.logicalAnd(Objects.equals(name, "createDocument"),
 							Arrays.equals(parameterTypes, new Class<?>[] { JTextComponent.class, Number.class }))
-					|| Boolean.logicalAnd(Objects.equals(name, "createKeyListener"), m.getParameterCount() == 0)) {
+					|| Boolean.logicalAnd(Objects.equals(name, "createKeyListener"), m.getParameterCount() == 0)
+					|| Boolean.logicalAnd(Objects.equals(name, "createKeyListener2"),
+							Arrays.equals(parameterTypes, new Class<?>[] { KeyStoreCertificateSshUpdater.class }))) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
@@ -746,7 +746,13 @@ class KeyStoreCertificateSshUpdaterTest {
 					|| Boolean.logicalAnd(Objects.equals(name, "getPorts"), m.getParameterCount() == 0)
 					|| Boolean.logicalAnd(Objects.equals(name, "createDocument"),
 							Arrays.equals(parameterTypes, new Class<?>[] { JTextComponent.class, Number.class }))
-					|| Boolean.logicalAnd(Objects.equals(name, "createKeyListener"), m.getParameterCount() == 0)) {
+					|| Boolean.logicalAnd(Objects.equals(name, "createKeyListener"), m.getParameterCount() == 0)
+					|| Boolean.logicalAnd(Objects.equals(name, "createKeyListener2"),
+							Arrays.equals(parameterTypes, new Class<?>[] { KeyStoreCertificateSshUpdater.class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "getDeclaredFields"),
+							Arrays.equals(parameterTypes, new Class<?>[] { Class.class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "toMap"),
+							Arrays.equals(parameterTypes, new Class<?>[] { Object.class }))) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
