@@ -336,9 +336,10 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 						//
 						value = Objects.toString(getValue(entry));
 						//
-						if (Boolean.logicalAnd(isWindows(),
-								Strings.CI.contains(Objects.toString(getKey(entry)), "password"))
-								&& StringUtils.isNotEmpty(value)) {
+						if (Boolean.logicalAnd(
+								Boolean.logicalAnd(isWindows(),
+										Strings.CI.contains(Objects.toString(getKey(entry)), "password")),
+								StringUtils.isNotEmpty(value))) {
 							//
 							try {
 								//
