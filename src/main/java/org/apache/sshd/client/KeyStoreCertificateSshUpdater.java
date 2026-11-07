@@ -336,7 +336,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 						//
 					} // if
 						//
-				} // if
+				} // for
 					//
 			} // if
 				//
