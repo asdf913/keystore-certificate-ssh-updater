@@ -303,14 +303,8 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			for (int i = 0; i < getLength(nodeList); i++) {
 				//
-				if ((node = item(nodeList, i)) == null) {
-					//
-					continue;
-					//
-				} // if
-					//
 				(zfp = new FileZillaProfile()).name = getTextContent(
-						cast(Node.class, evaluate(xp, "Name", node, XPathConstants.NODE)));
+						cast(Node.class, evaluate(xp, "Name", node = item(nodeList, i), XPathConstants.NODE)));
 				//
 				if (Boolean.logicalAnd(
 						(node1 = cast(Node.class, evaluate(xp, "Host", node, XPathConstants.NODE))) != null,
