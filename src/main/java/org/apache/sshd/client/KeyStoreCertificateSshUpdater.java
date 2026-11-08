@@ -95,6 +95,7 @@ import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
@@ -376,10 +377,8 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			setRenderer(instance.jcb, (list, value, index, isSelected, cellHasFocus) -> {
 				//
-				final Component component = lcr != null
-						? ((ListCellRenderer) lcr).getListCellRendererComponent(list, value, index, isSelected,
-								cellHasFocus)
-						: null;
+				final Component component = getListCellRendererComponent(((ListCellRenderer) lcr), list, value, index,
+						isSelected, cellHasFocus);
 				//
 				final StringBuilder sb = new StringBuilder(StringUtils.defaultString(value.name));
 				//
@@ -537,6 +536,13 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 		} // try
 			//
+	}
+
+	private static <E> Component getListCellRendererComponent(final ListCellRenderer<E> instance,
+			final JList<? extends E> list, final E value, final int index, final boolean isSelected,
+			final boolean cellHasFocus) {
+		return instance != null ? instance.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
+				: null;
 	}
 
 	private static <E> void addActionListener(final JComboBox<E> instance, final ActionListener actionListener) {

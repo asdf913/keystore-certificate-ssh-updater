@@ -42,6 +42,7 @@ import javax.swing.AbstractButton;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JTextField;
+import javax.swing.ListCellRenderer;
 import javax.swing.border.Border;
 import javax.swing.text.JTextComponent;
 import javax.xml.parsers.DocumentBuilder;
@@ -408,6 +409,10 @@ class KeyStoreCertificateSshUpdaterTest {
 			} else if (proxy instanceof AnnotatedElement && Objects.equals(name, "isAnnotationPresent")) {
 				//
 				return isAnnotationPresent;
+				//
+			} else if (proxy instanceof ListCellRenderer && Objects.equals(name, "getListCellRendererComponent")) {
+				//
+				return null;
 				//
 			} // if
 				//
