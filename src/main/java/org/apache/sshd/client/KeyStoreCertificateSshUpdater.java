@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -88,14 +89,18 @@ import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.security.auth.x500.X500Principal;
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import javax.swing.ListCellRenderer;
 import javax.swing.WindowConstants;
 import javax.swing.border.Border;
 import javax.swing.event.DocumentEvent;
@@ -167,9 +172,16 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import com.google.common.net.HostAndPort;
+import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.Crypt32Util;
 import com.sun.jna.platform.win32.Kernel32Util;
+import com.sun.jna.platform.win32.KnownFolders;
+import com.sun.jna.platform.win32.Ole32;
+import com.sun.jna.platform.win32.Shell32;
 import com.sun.jna.platform.win32.Win32Exception;
+import com.sun.jna.platform.win32.WinNT.HANDLE;
+import com.sun.jna.platform.win32.WinNT.HRESULT;
+import com.sun.jna.ptr.PointerByReference;
 
 import io.github.toolfactory.narcissus.Narcissus;
 import net.miginfocom.swing.MigLayout;
@@ -236,6 +248,20 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 
 	private Map<String, String> map = null;
 
+	private JComboBox<FileZillaProfile> jcb = null;
+
+	private static class FileZillaProfile {
+
+		private HostAndPort hostAndPort = null;
+
+		private BasicCredentialsProvider basicCredentialsProvider = null;
+
+		private String name = null;
+
+		private File keyFile = null;
+
+	}
+
 	public static void main(final String[] args) throws Exception {
 		//
 		final File tempFile = createTempFile(nextAlphabetic(RandomStringUtils.secure(), 3), null);
@@ -250,9 +276,147 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			instance.setLayout(new MigLayout());
 			//
-			instance.add(new JLabel("Host"));
+			instance.add(new JLabel("FileZilla profile"));
+			//
+			final File file = ObjectUtils.getIfNull(
+					getFileZillaSiteManagerXmlFile(
+							testAndApply(Objects::nonNull, getRoamingAppDataFolder(), File::new, null)),
+					() -> new File("sitemanager.xml"));
+			//
+			DefaultComboBoxModel<FileZillaProfile> cbm = null;
+			//
+			final XPath xp = newXPath(XPathFactory.newInstance());
+			//
+			final NodeList nodeList = cast(NodeList.class,
+					evaluate(xp, "/*/*/Server", testAndApply(
+							x -> and(x, KeyStoreCertificateSshUpdater::exists, KeyStoreCertificateSshUpdater::isFile),
+							file, x -> parse(newDocumentBuilder(DocumentBuilderFactory.newInstance()), x), null),
+							XPathConstants.NODESET));
+			//
+			Node node, node1, node2 = null;
+			//
+			NamedNodeMap attributes = null;
+			//
+			Decoder decoder = null;
+			//
+			BasicCredentialsImpl bci = null;
+			//
+			FileZillaProfile zfp = null;
+			//
+			for (int i = 0; i < getLength(nodeList); i++) {
+				//
+				if ((node = item(nodeList, i)) == null) {
+					//
+					continue;
+					//
+				} // if
+					//
+				(zfp = new FileZillaProfile()).name = getTextContent(
+						cast(Node.class, evaluate(xp, "Name", node, XPathConstants.NODE)));
+				//
+				if ((node1 = cast(Node.class, evaluate(xp, "Host", node, XPathConstants.NODE))) != null
+						&& (node2 = cast(Node.class, evaluate(xp, "Port", node, XPathConstants.NODE))) != null) {
+					//
+					zfp.hostAndPort = HostAndPort.fromParts(getTextContent(node1),
+							NumberUtils.toInt(getTextContent(node2), SshConstants.DEFAULT_PORT));
+					//
+				} else if (node1 != null) {
+					//
+					zfp.hostAndPort = HostAndPort.fromHost(getTextContent(node1));
+					//
+				} else {
+					//
+					throw new RuntimeException();
+					//
+				} // if
+					//
+				if ((node1 = cast(Node.class, evaluate(xp, "User", node, XPathConstants.NODE))) != null
+						&& (node2 = cast(Node.class, evaluate(xp, "Pass", node, XPathConstants.NODE))) != null) {
+					//
+					if ((attributes = node2.getAttributes()) != null
+							&& Objects.equals(getNodeValue(attributes.getNamedItem("encoding")), "base64")) {
+						//
+						zfp.basicCredentialsProvider = new BasicCredentialsImpl(getTextContent(node1),
+								testAndApply(Objects::nonNull,
+										decode(decoder = ObjectUtils.getIfNull(decoder, () -> Base64.getDecoder()),
+												getTextContent(node2)),
+										String::new, null));
+						//
+					} else {
+						//
+						throw new RuntimeException();
+						//
+					} // if
+						//
+				} else if (node1 != null) {
+					//
+					(bci = new BasicCredentialsImpl()).setUsername(getTextContent(node1));
+					//
+					zfp.basicCredentialsProvider = bci;
+					//
+				} else {
+					//
+					throw new RuntimeException();
+					//
+				} // if
+					//
+				zfp.keyFile = testAndApply(Objects::nonNull,
+						getTextContent(cast(Node.class, evaluate(xp, "Keyfile", node, XPathConstants.NODE))), File::new,
+						null);
+				//
+				if ((cbm = ObjectUtils.getIfNull(cbm, DefaultComboBoxModel::new)) != null) {
+					//
+					cbm.addElement(zfp);
+					//
+				} // if
+					//
+			} // for
+				//
+			instance.jcb = new JComboBox<>(cbm);
+			//
+			final ListCellRenderer<?> lcr = getRenderer(instance.jcb);
+			//
+			setRenderer(instance.jcb, new ListCellRenderer<FileZillaProfile>() {
+
+				@Override
+				public Component getListCellRendererComponent(final JList<? extends FileZillaProfile> list,
+						final FileZillaProfile value, final int index, final boolean isSelected,
+						final boolean cellHasFocus) {
+					//
+					final Component component = lcr != null
+							? ((ListCellRenderer) lcr).getListCellRendererComponent(list, value, index, isSelected,
+									cellHasFocus)
+							: null;
+					//
+					final JLabel jLabel = cast(JLabel.class, component);
+					//
+					if (jLabel != null) {
+						//
+						final StringBuilder sb = new StringBuilder(StringUtils.defaultString(value.name));
+						//
+						if (StringUtils.isNotEmpty(sb)) {
+							//
+							sb.append(" ");
+							//
+						} // if
+							//
+						jLabel.setText(Objects.toString(sb.append(value != null ? value.hostAndPort : null)));
+						//
+					} // if
+						//
+					return component;
+					//
+				}
+
+			});
+			//
+			addActionListener(instance.jcb, instance);
 			//
 			final String wrap = "wrap";
+			//
+			instance.add(instance.jcb, wrap);
+			//
+			instance.add(new JLabel("Host"));
 			//
 			instance.add(instance.tfHost = new JTextField(), String.format("wmin %1$s,%2$s", 200, wrap));
 			//
@@ -389,6 +553,139 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 	}
 
+	private static <E> void addActionListener(final JComboBox<E> instance, final ActionListener actionListener) {
+		//
+		if (instance == null) {
+			//
+			return;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "listenerList")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		if (field == null || Narcissus.getField(instance, field) != null) {
+			//
+			instance.addActionListener(instance);
+			//
+		} // if
+			//
+	}
+
+	private static <E> void setRenderer(final JComboBox<E> instance,
+			final ListCellRenderer<? super E> listCellRenderer) {
+		//
+		if (instance == null) {
+			//
+			return;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), OBJECT_LOCK)), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		if (field == null || Narcissus.getField(instance, field) != null) {
+			//
+			instance.setRenderer(listCellRenderer);
+			//
+		} // if
+			//
+	}
+
+	private static <E> ListCellRenderer<? super E> getRenderer(final JComboBox<E> instance) {
+		return instance != null ? instance.getRenderer() : null;
+	}
+
+	private static String getTextContent(final Node instance) {
+		return instance != null ? instance.getTextContent() : null;
+	}
+
+	private static String getRoamingAppDataFolder() {
+		//
+		if (isWindows()) {
+			//
+			final PointerByReference pbr = new PointerByReference();
+			//
+			try {
+				//
+				final Shell32 shell32 = Shell32.INSTANCE;
+				//
+				final HRESULT hrKnown = shell32 != null
+						? shell32.SHGetKnownFolderPath(KnownFolders.FOLDERID_RoamingAppData, 0, (HANDLE) null, pbr)
+						: null;
+
+				if (hrKnown != null && hrKnown.intValue() == 0 && pbr.getValue() != null) {
+					//
+					return getWideString(pbr.getValue(), 0);
+					//
+				} // if
+					//
+			} finally {
+				//
+				final Ole32 ole32 = Ole32.INSTANCE;
+				//
+				if (ole32 != null) {
+					//
+					ole32.CoTaskMemFree(pbr.getValue());
+					//
+				} // if
+					//
+			} // try
+				//
+		} // if
+			//
+		return null;
+		//
+	}
+
+	private static String getWideString(final Pointer instance, final long offset) {
+		return instance != null ? instance.getWideString(offset) : null;
+	}
+
+	private static File getFileZillaSiteManagerXmlFile(final File folder) {
+		//
+		if (Boolean.logicalAnd(exists(folder), isDirectory(folder))) {
+			//
+			final File fileZilla = testAndApply(x -> x != null && x.length == 1, folder.listFiles(new FilenameFilter() {
+
+				@Override
+				public boolean accept(final File dir, final String name) {
+					//
+					return Objects.equals(name, "FileZilla");
+					//
+				}
+			}), x -> ArrayUtils.get(x, 0), null);
+			//
+			if (Boolean.logicalAnd(exists(fileZilla), isDirectory(fileZilla))) {
+				//
+				return testAndApply(x -> x != null && x.length == 1, fileZilla.listFiles(new FilenameFilter() {
+
+					@Override
+					public boolean accept(final File dir, final String name) {
+						//
+						return Objects.equals(name, "sitemanager.xml");
+						//
+					}
+				}), x -> ArrayUtils.get(x, 0), null);
+				//
+			} // if
+				//
+		} // if
+			//
+		return null;
+		//
+	}
+
+	private static boolean isDirectory(final File instance) {
+		return instance != null && instance.getPath() != null && instance.isDirectory();
+	}
+
 	private static void setText(final Object instance, final Map<?, ?> map) {
 		//
 		if (entrySet(map) == null || entrySet(map).iterator() == null) {
@@ -437,7 +734,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 						//
 				} // if
 					//
-				jtc.setText(value);
+				setText(jtc, value);
 				//
 			} else {
 				//
@@ -446,6 +743,28 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			} // if
 				//
 		} // for
+			//
+	}
+
+	private static void setText(final JTextComponent instance, final String text) {
+		//
+		if (instance == null) {
+			//
+			return;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "model")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		if (field == null || Narcissus.getField(instance, field) != null) {
+			//
+			instance.setText(text);
+			//
+		} // if
 			//
 	}
 
@@ -968,12 +1287,8 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 				final File file = jfc.getSelectedFile();
 				//
-				if (tfPublicKey != null) {
-					//
-					tfPublicKey.setText(exists(file) && isFile(file) ? getAbsolutePath(file) : null);
-					//
-				} // if
-					//
+				setText(tfPublicKey, exists(file) && isFile(file) ? getAbsolutePath(file) : null);
+				//
 			} // if
 				//
 		} else if (Objects.equals(source, btnExecute)) {
@@ -1009,6 +1324,29 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				FileUtils.deleteQuietly(tempFile);
 				//
 			} // try
+				//
+		} else if (Objects.equals(source, jcb)) {
+			//
+			final FileZillaProfile zfp = cast(FileZillaProfile.class, jcb != null ? jcb.getSelectedItem() : null);
+			//
+			if (zfp != null) {
+				//
+				final HostAndPort hostAndPort = zfp.hostAndPort;
+				//
+				setText(tfHost, getHost(hostAndPort));
+				//
+				setText(tfPort, Integer.toString(hasPort(hostAndPort) ? getPort(hostAndPort, SshConstants.DEFAULT_PORT)
+						: SshConstants.DEFAULT_PORT));
+				//
+				final BasicCredentialsProvider basicCredentialsProvider = zfp.basicCredentialsProvider;
+				//
+				setText(tfUsername, getUsername(basicCredentialsProvider));
+				//
+				setText(tfPassword, getPassword(basicCredentialsProvider));
+				//
+				setText(tfPublicKey, getAbsolutePath(zfp.keyFile));
+				//
+			} // if
 				//
 		} // if
 			//

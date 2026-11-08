@@ -275,7 +275,7 @@ class KeyStoreCertificateSshUpdaterTest {
 			} else if (proxy instanceof Node) {
 				//
 				if (contains(Arrays.asList("getAttributes", "getNodeValue", "getParentNode", "getNamespaceURI",
-						"getLocalName"), name)) {
+						"getLocalName", "getTextContent"), name)) {
 					//
 					return null;
 					//
@@ -508,6 +508,10 @@ class KeyStoreCertificateSshUpdaterTest {
 					//
 					add(collection, Integer.valueOf(0));
 					//
+				} else if (Objects.equals(parameterType, Long.TYPE)) {
+					//
+					add(collection, Long.valueOf(0));
+					//
 				} else if (Objects.equals(parameterType, Boolean.TYPE)) {
 					//
 					add(collection, Boolean.FALSE);
@@ -611,6 +615,10 @@ class KeyStoreCertificateSshUpdaterTest {
 				if (Objects.equals(parameterType = ArrayUtils.get(parameterTypes, j), Integer.TYPE)) {
 					//
 					add(collection, Integer.valueOf(0));
+					//
+				} else if (Objects.equals(parameterType, Long.TYPE)) {
+					//
+					add(collection, Long.valueOf(0));
 					//
 				} else if (Objects.equals(parameterType, Boolean.TYPE)) {
 					//
