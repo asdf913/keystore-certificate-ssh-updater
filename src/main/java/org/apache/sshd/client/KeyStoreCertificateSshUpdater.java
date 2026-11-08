@@ -260,6 +260,14 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 
 		private File keyFile = null;
 
+		private HostAndPort getHostAndPort() {
+			return hostAndPort;
+		}
+
+		private static HostAndPort getHostAndPort(final FileZillaProfile instance) {
+			return instance != null ? instance.getHostAndPort() : null;
+		}
+
 	}
 
 	public static void main(final String[] args) throws Exception {
@@ -375,7 +383,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				testAndAccept(StringUtils::isNotEmpty, sb, x -> append(x, ' '));
 				//
 				setText(cast(JLabel.class, component),
-						Objects.toString(sb.append(value != null ? value.hostAndPort : null)));
+						Objects.toString(sb.append(FileZillaProfile.getHostAndPort(value))));
 				//
 				return component;
 				//
@@ -1345,14 +1353,14 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			final FileZillaProfile zfp = cast(FileZillaProfile.class, getSelectedItem(jcb));
 			//
+			final HostAndPort hostAndPort = FileZillaProfile.getHostAndPort(zfp);
+			//
+			setText(tfHost, getHost(hostAndPort));
+			//
+			setText(tfPort, Integer.toString(testAndApplyAsInt(KeyStoreCertificateSshUpdater::hasPort, hostAndPort,
+					x -> getPort(x, SshConstants.DEFAULT_PORT), null, SshConstants.DEFAULT_PORT)));
+			//
 			if (zfp != null) {
-				//
-				final HostAndPort hostAndPort = zfp.hostAndPort;
-				//
-				setText(tfHost, getHost(hostAndPort));
-				//
-				setText(tfPort, Integer.toString(testAndApplyAsInt(KeyStoreCertificateSshUpdater::hasPort, hostAndPort,
-						x -> getPort(x, SshConstants.DEFAULT_PORT), null, SshConstants.DEFAULT_PORT)));
 				//
 				final BasicCredentialsProvider basicCredentialsProvider = zfp.basicCredentialsProvider;
 				//
