@@ -338,7 +338,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 						//
 						zfp.basicCredentialsProvider = new BasicCredentialsImpl(getTextContent(node1),
 								testAndApply(Objects::nonNull,
-										decode(decoder = ObjectUtils.getIfNull(decoder, () -> Base64.getDecoder()),
+										decode(decoder = ObjectUtils.getIfNull(decoder, Base64::getDecoder),
 												getTextContent(node2)),
 										String::new, null));
 						//
