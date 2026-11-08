@@ -401,6 +401,40 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 			setText(instance, properties);
 			//
+			HostAndPort hostAndPort = null;
+			//
+			final String host = getText(instance.tfHost);
+			//
+			final String port = getText(instance.tfPort);
+			//
+			if (NumberUtils.isDigits(port)) {
+				//
+				hostAndPort = fromParts(host, NumberUtils.toInt(port, SshConstants.DEFAULT_PORT));
+				//
+			} else {
+				//
+				hostAndPort = HostAndPort.fromHost(host);
+				//
+			} // if
+				//
+			int[] ints = null;
+			//
+			for (int i = 0; cbm != null && i < cbm.getSize(); i++) {
+				//
+				if (Objects.equals(FileZillaProfile.getHostAndPort(cbm.getElementAt(i)), hostAndPort)) {
+					//
+					ints = ArrayUtils.add(ints, i);
+					//
+				} // if
+					//
+			} // for
+				//
+			if (ints != null && ints.length == 1 && cbm != null) {
+				//
+				cbm.setSelectedItem(cbm.getElementAt(ints[0]));
+				//
+			} // if
+				//
 			final KeyListener keyListener = createKeyListener2(instance);
 			//
 			forEach(map(filter(get(supplier), f -> isAssignableFrom(JTextComponent.class, getType(f))),
