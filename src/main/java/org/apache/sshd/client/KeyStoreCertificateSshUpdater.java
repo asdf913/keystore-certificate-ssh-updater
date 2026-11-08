@@ -314,8 +314,9 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				(zfp = new FileZillaProfile()).name = getTextContent(
 						cast(Node.class, evaluate(xp, "Name", node, XPathConstants.NODE)));
 				//
-				if ((node1 = cast(Node.class, evaluate(xp, "Host", node, XPathConstants.NODE))) != null
-						&& (node2 = cast(Node.class, evaluate(xp, "Port", node, XPathConstants.NODE))) != null) {
+				if (Boolean.logicalAnd(
+						(node1 = cast(Node.class, evaluate(xp, "Host", node, XPathConstants.NODE))) != null,
+						(node2 = cast(Node.class, evaluate(xp, "Port", node, XPathConstants.NODE))) != null)) {
 					//
 					zfp.hostAndPort = HostAndPort.fromParts(getTextContent(node1),
 							NumberUtils.toInt(getTextContent(node2), SshConstants.DEFAULT_PORT));
