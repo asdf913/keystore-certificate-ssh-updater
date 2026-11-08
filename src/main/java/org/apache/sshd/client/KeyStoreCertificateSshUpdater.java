@@ -100,6 +100,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
+import javax.swing.MutableComboBoxModel;
 import javax.swing.WindowConstants;
 import javax.swing.border.Border;
 import javax.swing.event.DocumentEvent;
@@ -363,12 +364,8 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 						getTextContent(cast(Node.class, evaluate(xp, "Keyfile", node, XPathConstants.NODE))), File::new,
 						null);
 				//
-				if ((cbm = ObjectUtils.getIfNull(cbm, DefaultComboBoxModel::new)) != null) {
-					//
-					cbm.addElement(zfp);
-					//
-				} // if
-					//
+				addElement(cbm = ObjectUtils.getIfNull(cbm, DefaultComboBoxModel::new), zfp);
+				//
 			} // for
 				//
 			instance.jcb = new JComboBox<>(cbm);
@@ -532,6 +529,12 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 		} // try
 			//
+	}
+
+	private static <E> void addElement(final MutableComboBoxModel<E> instance, final E item) {
+		if (instance != null) {
+			instance.addElement(item);
+		}
 	}
 
 	private static StringBuilder append(final StringBuilder instance, final char c) {
