@@ -286,86 +286,16 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			instance.add(new JLabel("FileZilla profile"));
 			//
-			final File file = ObjectUtils.getIfNull(
+			final List<FileZillaProfile> fileZillaProfiles = getFileZillaProfiles(ObjectUtils.getIfNull(
 					getFileZillaSiteManagerXmlFile(
 							testAndApply(Objects::nonNull, getRoamingAppDataFolder(), File::new, null)),
-					() -> new File("sitemanager.xml"));
+					() -> new File("sitemanager.xml")));
 			//
 			DefaultComboBoxModel<FileZillaProfile> cbm = null;
 			//
-			final XPath xp = newXPath(XPathFactory.newInstance());
-			//
-			final NodeList nodeList = cast(NodeList.class,
-					evaluate(xp, "/*/*/Server", testAndApply(
-							x -> and(x, KeyStoreCertificateSshUpdater::exists, KeyStoreCertificateSshUpdater::isFile),
-							file, x -> parse(newDocumentBuilder(DocumentBuilderFactory.newInstance()), x), null),
-							XPathConstants.NODESET));
-			//
-			Node node, node1, node2 = null;
-			//
-			Decoder decoder = null;
-			//
-			BasicCredentialsImpl bci = null;
-			//
-			FileZillaProfile zfp = null;
-			//
-			for (int i = 0; i < getLength(nodeList); i++) {
+			for (int i = 0; i < size(fileZillaProfiles); i++) {
 				//
-				(zfp = new FileZillaProfile()).name = getTextContent(
-						cast(Node.class, evaluate(xp, "Name", node = item(nodeList, i), XPathConstants.NODE)));
-				//
-				if (Boolean.logicalAnd(
-						(node1 = cast(Node.class, evaluate(xp, "Host", node, XPathConstants.NODE))) != null,
-						(node2 = cast(Node.class, evaluate(xp, "Port", node, XPathConstants.NODE))) != null)) {
-					//
-					zfp.hostAndPort = HostAndPort.fromParts(getTextContent(node1),
-							NumberUtils.toInt(getTextContent(node2), SshConstants.DEFAULT_PORT));
-					//
-				} else if (node1 != null) {
-					//
-					zfp.hostAndPort = HostAndPort.fromHost(getTextContent(node1));
-					//
-				} else {
-					//
-					throw new RuntimeException();
-					//
-				} // if
-					//
-				if (Boolean.logicalAnd(
-						(node1 = cast(Node.class, evaluate(xp, "User", node, XPathConstants.NODE))) != null,
-						(node2 = cast(Node.class, evaluate(xp, "Pass", node, XPathConstants.NODE))) != null)) {
-					//
-					if (Objects.equals(getNodeValue(getNamedItem(getAttributes(node2), "encoding")), "base64")) {
-						//
-						zfp.basicCredentialsProvider = new BasicCredentialsImpl(getTextContent(node1),
-								testAndApply(Objects::nonNull,
-										decode(decoder = ObjectUtils.getIfNull(decoder, Base64::getDecoder),
-												getTextContent(node2)),
-										String::new, null));
-						//
-					} else {
-						//
-						throw new RuntimeException();
-						//
-					} // if
-						//
-				} else if (node1 != null) {
-					//
-					(bci = new BasicCredentialsImpl()).setUsername(getTextContent(node1));
-					//
-					zfp.basicCredentialsProvider = bci;
-					//
-				} else {
-					//
-					throw new RuntimeException();
-					//
-				} // if
-					//
-				zfp.keyFile = testAndApply(Objects::nonNull,
-						getTextContent(cast(Node.class, evaluate(xp, "Keyfile", node, XPathConstants.NODE))), File::new,
-						null);
-				//
-				addElement(cbm = ObjectUtils.getIfNull(cbm, DefaultComboBoxModel::new), zfp);
+				addElement(cbm = ObjectUtils.getIfNull(cbm, DefaultComboBoxModel::new), get(fileZillaProfiles, i));
 				//
 			} // for
 				//
@@ -530,6 +460,86 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 		} // try
 			//
+	}
+
+	private static List<FileZillaProfile> getFileZillaProfiles(final File file) throws Exception {
+		//
+		final XPath xp = newXPath(XPathFactory.newInstance());
+		//
+		final NodeList nodeList = cast(NodeList.class, evaluate(xp, "/*/*/Server",
+				testAndApply(x -> and(x, KeyStoreCertificateSshUpdater::exists, KeyStoreCertificateSshUpdater::isFile),
+						file, x -> parse(newDocumentBuilder(DocumentBuilderFactory.newInstance()), x), null),
+				XPathConstants.NODESET));
+		//
+		Node node, node1, node2 = null;
+		//
+		Decoder decoder = null;
+		//
+		BasicCredentialsImpl bci = null;
+		//
+		FileZillaProfile zfp = null;
+		//
+		List<FileZillaProfile> list = null;
+		//
+		for (int i = 0; i < getLength(nodeList); i++) {
+			//
+			(zfp = new FileZillaProfile()).name = getTextContent(
+					cast(Node.class, evaluate(xp, "Name", node = item(nodeList, i), XPathConstants.NODE)));
+			//
+			if (Boolean.logicalAnd((node1 = cast(Node.class, evaluate(xp, "Host", node, XPathConstants.NODE))) != null,
+					(node2 = cast(Node.class, evaluate(xp, "Port", node, XPathConstants.NODE))) != null)) {
+				//
+				zfp.hostAndPort = HostAndPort.fromParts(getTextContent(node1),
+						NumberUtils.toInt(getTextContent(node2), SshConstants.DEFAULT_PORT));
+				//
+			} else if (node1 != null) {
+				//
+				zfp.hostAndPort = HostAndPort.fromHost(getTextContent(node1));
+				//
+			} else {
+				//
+				throw new RuntimeException();
+				//
+			} // if
+				//
+			if (Boolean.logicalAnd((node1 = cast(Node.class, evaluate(xp, "User", node, XPathConstants.NODE))) != null,
+					(node2 = cast(Node.class, evaluate(xp, "Pass", node, XPathConstants.NODE))) != null)) {
+				//
+				if (Objects.equals(getNodeValue(getNamedItem(getAttributes(node2), "encoding")), "base64")) {
+					//
+					zfp.basicCredentialsProvider = new BasicCredentialsImpl(getTextContent(node1), testAndApply(
+							Objects::nonNull,
+							decode(decoder = ObjectUtils.getIfNull(decoder, Base64::getDecoder), getTextContent(node2)),
+							String::new, null));
+					//
+				} else {
+					//
+					throw new RuntimeException();
+					//
+				} // if
+					//
+			} else if (node1 != null) {
+				//
+				(bci = new BasicCredentialsImpl()).setUsername(getTextContent(node1));
+				//
+				zfp.basicCredentialsProvider = bci;
+				//
+			} else {
+				//
+				throw new RuntimeException();
+				//
+			} // if
+				//
+			zfp.keyFile = testAndApply(Objects::nonNull,
+					getTextContent(cast(Node.class, evaluate(xp, "Keyfile", node, XPathConstants.NODE))), File::new,
+					null);
+			//
+			add(list = ObjectUtils.getIfNull(list, ArrayList::new), zfp);
+			//
+		} // for
+			//
+		return list;
+		//
 	}
 
 	private static <E> void addElement(final MutableComboBoxModel<E> instance, final E item) {
