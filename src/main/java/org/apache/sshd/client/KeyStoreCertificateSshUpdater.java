@@ -295,8 +295,6 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			Node node, node1, node2 = null;
 			//
-			NamedNodeMap attributes = null;
-			//
 			Decoder decoder = null;
 			//
 			BasicCredentialsImpl bci = null;
@@ -335,8 +333,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 						(node1 = cast(Node.class, evaluate(xp, "User", node, XPathConstants.NODE))) != null,
 						(node2 = cast(Node.class, evaluate(xp, "Pass", node, XPathConstants.NODE))) != null)) {
 					//
-					if ((attributes = node2.getAttributes()) != null
-							&& Objects.equals(getNodeValue(attributes.getNamedItem("encoding")), "base64")) {
+					if (Objects.equals(getNodeValue(getNamedItem(getAttributes(node2), "encoding")), "base64")) {
 						//
 						zfp.basicCredentialsProvider = new BasicCredentialsImpl(getTextContent(node1),
 								testAndApply(Objects::nonNull,
