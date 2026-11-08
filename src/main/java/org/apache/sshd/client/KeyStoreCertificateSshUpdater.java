@@ -569,7 +569,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 		//
 		if (field == null || Narcissus.getField(instance, field) != null) {
 			//
-			instance.addActionListener(instance);
+			instance.addActionListener(actionListener);
 			//
 		} // if
 			//
