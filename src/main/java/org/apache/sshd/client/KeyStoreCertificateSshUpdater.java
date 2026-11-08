@@ -382,12 +382,8 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 				final StringBuilder sb = new StringBuilder(StringUtils.defaultString(value.name));
 				//
-				if (StringUtils.isNotEmpty(sb)) {
-					//
-					sb.append(' ');
-					//
-				} // if
-					//
+				testAndAccept(StringUtils::isNotEmpty, sb, x -> append(x, ' '));
+				//
 				setText(cast(JLabel.class, component),
 						Objects.toString(sb.append(value != null ? value.hostAndPort : null)));
 				//
@@ -536,6 +532,24 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 		} // try
 			//
+	}
+
+	private static StringBuilder append(final StringBuilder instance, final char c) {
+		//
+		if (instance == null) {
+			//
+			return instance;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), VALUE)), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return field == null || Narcissus.getField(instance, field) != null ? instance.append(c) : instance;
+		//
 	}
 
 	private static <E> Component getListCellRendererComponent(final ListCellRenderer<E> instance,

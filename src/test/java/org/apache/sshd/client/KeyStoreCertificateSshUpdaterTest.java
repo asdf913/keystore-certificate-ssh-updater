@@ -780,7 +780,9 @@ class KeyStoreCertificateSshUpdaterTest {
 							Arrays.equals(parameterTypes,
 									new Class<?>[] { JTextComponent.class, Border.class, Border.class }))
 					|| Boolean.logicalAnd(Objects.equals(name, "encodeToString"),
-							Arrays.equals(parameterTypes, new Class<?>[] { Encoder.class, byte[].class }))) {
+							Arrays.equals(parameterTypes, new Class<?>[] { Encoder.class, byte[].class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "append"),
+							Arrays.equals(parameterTypes, new Class<?>[] { StringBuilder.class, Character.TYPE }))) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
