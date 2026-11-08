@@ -1310,7 +1310,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 		} else if (Objects.equals(source, jcb)) {
 			//
-			final FileZillaProfile zfp = cast(FileZillaProfile.class, jcb != null ? jcb.getSelectedItem() : null);
+			final FileZillaProfile zfp = cast(FileZillaProfile.class, getSelectedItem(jcb));
 			//
 			if (zfp != null) {
 				//
@@ -1333,6 +1333,24 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 		} // if
 			//
+	}
+
+	private static Object getSelectedItem(final JComboBox<?> instance) {
+		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						x -> Objects.equals(getName(x), "dataModel")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return field == null || Narcissus.getField(instance, field) != null ? instance.getSelectedItem() : null;
+		//
 	}
 
 	private static Object getSource(final EventObject instance) {
