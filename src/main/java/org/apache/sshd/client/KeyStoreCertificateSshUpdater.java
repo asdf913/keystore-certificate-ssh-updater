@@ -462,6 +462,29 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 	}
 
+	private static HostAndPort fromParts(final String host, final int port) {
+		//
+		final List<Method> ms = collect(
+				filter(testAndApply(Objects::nonNull, HostAndPort.class.getDeclaredMethods(), Arrays::stream, null),
+						x -> x != null && Boolean.logicalAnd(Objects.equals(getName(x), "fromParts"),
+								Arrays.equals(x.getParameterTypes(), new Class<?>[] { String.class, Integer.TYPE }))),
+				Collectors.toList());
+		//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(host), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), VALUE)), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return cast(HostAndPort.class,
+				testAndApply(
+						(a, b) -> Boolean.logicalAnd(isStatic(a),
+								b != null && (field == null || Narcissus.getField(b, field) != null)),
+						testAndApply(x -> size(x) == 1, ms, x -> get(x, 0), null), host,
+						(a, b) -> Narcissus.invokeStaticMethod(a, b, port), null));
+		//
+	}
+
 	private static List<FileZillaProfile> getFileZillaProfiles(final File file) throws Exception {
 		//
 		final XPath xp = newXPath(XPathFactory.newInstance());
@@ -489,7 +512,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			if (Boolean.logicalAnd((node1 = cast(Node.class, evaluate(xp, "Host", node, XPathConstants.NODE))) != null,
 					(node2 = cast(Node.class, evaluate(xp, "Port", node, XPathConstants.NODE))) != null)) {
 				//
-				zfp.hostAndPort = HostAndPort.fromParts(getTextContent(node1),
+				zfp.hostAndPort = fromParts(getTextContent(node1),
 						NumberUtils.toInt(getTextContent(node2), SshConstants.DEFAULT_PORT));
 				//
 			} else if (node1 != null) {
@@ -894,7 +917,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 			} // if
 				//
-			(config = new Config()).hostAndPort = HostAndPort.fromParts(
+			(config = new Config()).hostAndPort = fromParts(
 					getNodeValue(getNamedItem(attributes = getAttributes(node1), "host")),
 					NumberUtils.toInt(getNodeValue(getNamedItem(attributes, "port")), 22));
 			//
