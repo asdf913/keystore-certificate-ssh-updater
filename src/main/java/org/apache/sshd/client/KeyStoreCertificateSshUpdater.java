@@ -299,7 +299,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 			} // for
 				//
-			instance.jcb = new JComboBox<>(cbm);
+			instance.jcb = testAndApply(Objects::nonNull, cbm, JComboBox::new, x -> new JComboBox<>());
 			//
 			final ListCellRenderer<?> lcr = getRenderer(instance.jcb);
 			//
@@ -308,7 +308,8 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				final Component component = getListCellRendererComponent(((ListCellRenderer) lcr), list, value, index,
 						isSelected, cellHasFocus);
 				//
-				final StringBuilder sb = new StringBuilder(StringUtils.defaultString(value.name));
+				final StringBuilder sb = new StringBuilder(
+						StringUtils.defaultString(value != null ? value.name : null));
 				//
 				testAndAccept(StringUtils::isNotEmpty, sb, x -> append(x, ' '));
 				//
