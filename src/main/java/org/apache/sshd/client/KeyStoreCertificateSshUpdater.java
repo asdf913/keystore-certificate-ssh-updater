@@ -1320,8 +1320,8 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 				setText(tfHost, getHost(hostAndPort));
 				//
-				setText(tfPort, Integer.toString(hasPort(hostAndPort) ? getPort(hostAndPort, SshConstants.DEFAULT_PORT)
-						: SshConstants.DEFAULT_PORT));
+				setText(tfPort, Integer.toString(testAndApplyAsInt(KeyStoreCertificateSshUpdater::hasPort, hostAndPort,
+						x -> getPort(x, SshConstants.DEFAULT_PORT), null, SshConstants.DEFAULT_PORT)));
 				//
 				final BasicCredentialsProvider basicCredentialsProvider = zfp.basicCredentialsProvider;
 				//
