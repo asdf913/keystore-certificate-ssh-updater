@@ -467,8 +467,8 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 		//
 		final List<Method> ms = collect(
 				filter(testAndApply(Objects::nonNull, HostAndPort.class.getDeclaredMethods(), Arrays::stream, null),
-						x -> x != null && Boolean.logicalAnd(Objects.equals(getName(x), "fromParts"),
-								Arrays.equals(x.getParameterTypes(), new Class<?>[] { String.class, Integer.TYPE }))),
+						x -> Boolean.logicalAnd(Objects.equals(getName(x), "fromParts"),
+								Arrays.equals(getParameterTypes(x), new Class<?>[] { String.class, Integer.TYPE }))),
 				Collectors.toList());
 		//
 		final Field field = testAndApply(x -> size(x) == 1,
