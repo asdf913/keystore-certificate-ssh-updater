@@ -376,38 +376,31 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			final ListCellRenderer<?> lcr = getRenderer(instance.jcb);
 			//
-			setRenderer(instance.jcb, new ListCellRenderer<FileZillaProfile>() {
-
-				@Override
-				public Component getListCellRendererComponent(final JList<? extends FileZillaProfile> list,
-						final FileZillaProfile value, final int index, final boolean isSelected,
-						final boolean cellHasFocus) {
+			setRenderer(instance.jcb, (list, value, index, isSelected, cellHasFocus) -> {
+				//
+				final Component component = lcr != null
+						? ((ListCellRenderer) lcr).getListCellRendererComponent(list, value, index, isSelected,
+								cellHasFocus)
+						: null;
+				//
+				final JLabel jLabel = cast(JLabel.class, component);
+				//
+				if (jLabel != null) {
 					//
-					final Component component = lcr != null
-							? ((ListCellRenderer) lcr).getListCellRendererComponent(list, value, index, isSelected,
-									cellHasFocus)
-							: null;
+					final StringBuilder sb = new StringBuilder(StringUtils.defaultString(value.name));
 					//
-					final JLabel jLabel = cast(JLabel.class, component);
-					//
-					if (jLabel != null) {
+					if (StringUtils.isNotEmpty(sb)) {
 						//
-						final StringBuilder sb = new StringBuilder(StringUtils.defaultString(value.name));
-						//
-						if (StringUtils.isNotEmpty(sb)) {
-							//
-							sb.append(" ");
-							//
-						} // if
-							//
-						jLabel.setText(Objects.toString(sb.append(value != null ? value.hostAndPort : null)));
+						sb.append(" ");
 						//
 					} // if
 						//
-					return component;
+					jLabel.setText(Objects.toString(sb.append(value != null ? value.hostAndPort : null)));
 					//
-				}
-
+				} // if
+					//
+				return component;
+				//
 			});
 			//
 			addActionListener(instance.jcb, instance);
@@ -652,26 +645,18 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 		//
 		if (Boolean.logicalAnd(exists(folder), isDirectory(folder))) {
 			//
-			final File fileZilla = testAndApply(x -> x != null && x.length == 1, folder.listFiles(new FilenameFilter() {
-
-				@Override
-				public boolean accept(final File dir, final String name) {
-					//
-					return Objects.equals(name, "FileZilla");
-					//
-				}
+			final File fileZilla = testAndApply(x -> x != null && x.length == 1, folder.listFiles((dir, name) -> {
+				//
+				return Objects.equals(name, "FileZilla");
+				//
 			}), x -> ArrayUtils.get(x, 0), null);
 			//
 			if (Boolean.logicalAnd(exists(fileZilla), isDirectory(fileZilla))) {
 				//
-				return testAndApply(x -> x != null && x.length == 1, fileZilla.listFiles(new FilenameFilter() {
-
-					@Override
-					public boolean accept(final File dir, final String name) {
-						//
-						return Objects.equals(name, "sitemanager.xml");
-						//
-					}
+				return testAndApply(x -> x != null && x.length == 1, fileZilla.listFiles((dir, name) -> {
+					//
+					return Objects.equals(name, "sitemanager.xml");
+					//
 				}), x -> ArrayUtils.get(x, 0), null);
 				//
 			} // if
