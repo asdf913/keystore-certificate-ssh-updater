@@ -381,22 +381,17 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 								cellHasFocus)
 						: null;
 				//
-				final JLabel jLabel = cast(JLabel.class, component);
+				final StringBuilder sb = new StringBuilder(StringUtils.defaultString(value.name));
 				//
-				if (jLabel != null) {
+				if (StringUtils.isNotEmpty(sb)) {
 					//
-					final StringBuilder sb = new StringBuilder(StringUtils.defaultString(value.name));
-					//
-					if (StringUtils.isNotEmpty(sb)) {
-						//
-						sb.append(" ");
-						//
-					} // if
-						//
-					jLabel.setText(Objects.toString(sb.append(value != null ? value.hostAndPort : null)));
+					sb.append(' ');
 					//
 				} // if
 					//
+				setText(cast(JLabel.class, component),
+						Objects.toString(sb.append(value != null ? value.hostAndPort : null)));
+				//
 				return component;
 				//
 			});
@@ -741,6 +736,28 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				collect(filter(
 						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
 						f -> Objects.equals(getName(f), "model")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		if (field == null || Narcissus.getField(instance, field) != null) {
+			//
+			instance.setText(text);
+			//
+		} // if
+			//
+	}
+
+	private static void setText(final JLabel instance, final String text) {
+		//
+		if (instance == null) {
+			//
+			return;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), OBJECT_LOCK)), Collectors.toList()),
 				x -> get(x, 0), null);
 		//
 		if (field == null || Narcissus.getField(instance, field) != null) {
