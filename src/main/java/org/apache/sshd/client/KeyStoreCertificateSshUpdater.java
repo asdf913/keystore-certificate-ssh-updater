@@ -2863,6 +2863,12 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 	@Override
 	public void changedUpdate(final DocumentEvent evt) {
 		//
+		update();
+		//
+	}
+
+	private void update() {
+		//
 		final Map<String, String> m = toMap(this);
 		//
 		if (!isTestMode() && (this.map == null || !Objects.equals(this.map, m))) {
@@ -2963,27 +2969,15 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 	@Override
 	public void insertUpdate(final DocumentEvent evt) {
 		//
-		final Map<String, String> m = toMap(this);
+		update();
 		//
-		if (!isTestMode() && (this.map == null || !Objects.equals(this.map, m))) {
-			//
-			write(new File("KeyStoreCertificateSshUpdater.properties"), m);
-			//
-		} // if
-			//
 	}
 
 	@Override
 	public void removeUpdate(final DocumentEvent evt) {
 		//
-		final Map<String, String> m = toMap(this);
+		update();
 		//
-		if (!isTestMode() && (this.map == null || !Objects.equals(this.map, m))) {
-			//
-			write(new File("KeyStoreCertificateSshUpdater.properties"), m);
-			//
-		} // if
-			//
 	}
 
 }
