@@ -41,5 +41,5 @@ Double click the jar under <b>Microsoft Windows</b> or <b>Apple MacOS</b>.
 ## Default Key Store Password
 
 <a href="https://docs.oracle.com/en/java/javase/27/docs/specs/man/keytool.html">The keytool Command</a>
+<img width="1264" height="34" alt="image" src="https://github.com/user-attachments/assets/669d0d44-50c1-418a-98d1-da54aa2258ae" />
 
-<pre>The initial password of the cacerts keystore file is <b>changeit</b>. System administrators should change that password and the default access permission of that file upon installing the SDK.</pre>
