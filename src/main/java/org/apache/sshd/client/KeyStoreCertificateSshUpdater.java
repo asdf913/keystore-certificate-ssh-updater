@@ -330,8 +330,9 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 					//
 				} // if
 					//
-				if ((node1 = cast(Node.class, evaluate(xp, "User", node, XPathConstants.NODE))) != null
-						&& (node2 = cast(Node.class, evaluate(xp, "Pass", node, XPathConstants.NODE))) != null) {
+				if (Boolean.logicalAnd(
+						(node1 = cast(Node.class, evaluate(xp, "User", node, XPathConstants.NODE))) != null,
+						(node2 = cast(Node.class, evaluate(xp, "Pass", node, XPathConstants.NODE))) != null)) {
 					//
 					if ((attributes = node2.getAttributes()) != null
 							&& Objects.equals(getNodeValue(attributes.getNamedItem("encoding")), "base64")) {
