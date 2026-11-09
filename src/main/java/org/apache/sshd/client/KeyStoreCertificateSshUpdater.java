@@ -401,22 +401,12 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 			setText(instance, properties);
 			//
-			HostAndPort hostAndPort = null;
-			//
 			final String host = getText(instance.tfHost);
 			//
-			final String port = getText(instance.tfPort);
+			final HostAndPort hostAndPort = testAndApply(a -> NumberUtils.isDigits(a), getText(instance.tfPort),
+					a -> fromParts(host, NumberUtils.toInt(a, SshConstants.DEFAULT_PORT)),
+					a -> HostAndPort.fromHost(host));
 			//
-			if (NumberUtils.isDigits(port)) {
-				//
-				hostAndPort = fromParts(host, NumberUtils.toInt(port, SshConstants.DEFAULT_PORT));
-				//
-			} else {
-				//
-				hostAndPort = HostAndPort.fromHost(host);
-				//
-			} // if
-				//
 			int[] ints = null;
 			//
 			for (int i = 0; cbm != null && i < cbm.getSize(); i++) {
