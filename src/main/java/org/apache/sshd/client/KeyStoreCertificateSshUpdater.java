@@ -100,6 +100,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
+import javax.swing.ListModel;
 import javax.swing.MutableComboBoxModel;
 import javax.swing.WindowConstants;
 import javax.swing.border.Border;
@@ -409,9 +410,9 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 			//
 			int[] ints = null;
 			//
-			for (int i = 0; cbm != null && i < cbm.getSize(); i++) {
+			for (int i = 0; i < getSize(cbm); i++) {
 				//
-				if (Objects.equals(FileZillaProfile.getHostAndPort(cbm.getElementAt(i)), hostAndPort)) {
+				if (Objects.equals(FileZillaProfile.getHostAndPort(getElementAt(cbm, i)), hostAndPort)) {
 					//
 					ints = ArrayUtils.add(ints, i);
 					//
@@ -421,7 +422,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 			if (ints != null && ints.length == 1 && cbm != null) {
 				//
-				cbm.setSelectedItem(cbm.getElementAt(ints[0]));
+				cbm.setSelectedItem(getElementAt(cbm, ints[0]));
 				//
 			} // if
 				//
@@ -485,6 +486,14 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				//
 		} // try
 			//
+	}
+
+	private static <E> E getElementAt(final ListModel<E> instance, final int index) {
+		return instance != null ? instance.getElementAt(index) : null;
+	}
+
+	private static int getSize(final ListModel<?> instance) {
+		return instance != null ? instance.getSize() : 0;
 	}
 
 	private static HostAndPort fromParts(final String host, final int port) {

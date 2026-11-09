@@ -22,13 +22,13 @@ import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64.Encoder;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Base64.Encoder;
 import java.util.function.BiPredicate;
 import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
@@ -43,6 +43,7 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
+import javax.swing.ListModel;
 import javax.swing.border.Border;
 import javax.swing.text.JTextComponent;
 import javax.xml.parsers.DocumentBuilder;
@@ -414,6 +415,18 @@ class KeyStoreCertificateSshUpdaterTest {
 				//
 				return null;
 				//
+			} else if (proxy instanceof ListModel) {
+				//
+				if (Objects.equals(name, "getSize")) {
+					//
+					return size;
+					//
+				} else if (Objects.equals(name, "getElementAt")) {
+					//
+					return null;
+					//
+				} // if
+					//
 			} // if
 				//
 			throw new Throwable(name);
