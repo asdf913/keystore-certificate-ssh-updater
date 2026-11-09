@@ -261,6 +261,14 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 
 		private File keyFile = null;
 
+		private String getName() {
+			return name;
+		}
+
+		private static String getName(final FileZillaProfile instance) {
+			return instance != null ? instance.getName() : null;
+		}
+
 		private HostAndPort getHostAndPort() {
 			return hostAndPort;
 		}
@@ -309,8 +317,7 @@ public class KeyStoreCertificateSshUpdater extends JPanel implements ActionListe
 				final Component component = getListCellRendererComponent(((ListCellRenderer) lcr), list, value, index,
 						isSelected, cellHasFocus);
 				//
-				final StringBuilder sb = new StringBuilder(
-						StringUtils.defaultString(value != null ? value.name : null));
+				final StringBuilder sb = new StringBuilder(StringUtils.defaultString(FileZillaProfile.getName(value)));
 				//
 				testAndAccept(StringUtils::isNotEmpty, sb, x -> append(x, ' '));
 				//
