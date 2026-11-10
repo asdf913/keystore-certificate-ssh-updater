@@ -38,6 +38,11 @@
 
 Double click the jar under <b>Microsoft Windows</b> or <b>Apple MacOS</b>.
 
+### Screen shot
+
+#### Linux
+<img width="460" height="413" alt="image" src="https://github.com/user-attachments/assets/0447846a-4a0e-49af-834d-8b227f84ceb5" />
+
 ## Default Key Store Password
 
 <a href="https://docs.oracle.com/en/java/javase/27/docs/specs/man/keytool.html">The keytool Command</a>
